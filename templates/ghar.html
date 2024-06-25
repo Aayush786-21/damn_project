@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to QR_Dance</title>
+    <style>
+        body {
+            background-color: #8A2BE2; /* Viber-like purple */
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 50px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .button {
+            background-color: #ffffff;
+            color: #8A2BE2;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: #8A2BE2;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to QR_Dance</h1>
+    <div class="button-container">
+        <a href="/student" class="button">STUDENT</a>
+        <a href="/teacher" class="button">TEACHER</a>
+        <a href="/admin" class="button">ADMIN</a>
+    </div>
+</body>
+</html>
