@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Review - QR_Dance</title>
+    <style>
+        body {
+            background-color: #8A2BE2; /* Viber-like purple */
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .qr-container {
+            background-color: #ffffff;
+            color: #8A2BE2;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            margin: auto;
+        }
+        img {
+            margin-top: 20px;
+        }
+        p {
+            color: #ffffff;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-container">
+        <h2>QR Code Review</h2>
+        <p id="details"></p>
+        <img id="qr-code" src="" alt="QR Code">
+    </div>
+    <script>
+        document.getElementById('details').innerText = '{{ details }}';
+        document.getElementById('qr-code').src = '{{ qr_code_url }}';
+    </script>
+</body>
+</html>
