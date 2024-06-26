@@ -67,5 +67,9 @@ def register():
         return render_template('qr_review.html', details=details, qr_code_url=qr_code_path)
     return render_template('register.html')
 
+@app.route('/qr_review')
+def qr_review():
+    return render_template('qr_review.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
