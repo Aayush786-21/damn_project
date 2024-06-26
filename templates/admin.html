@@ -6,27 +6,32 @@
     <title>Admin - QR_Dance</title>
     <style>
         body {
-            background-color: #8A2BE2; /* Viber-like purple */
+            background-color: #8A2BE2; 
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            margin: center;
+            padding: 10%;
+            height: 100%;
+            display: center;
+            /* flex-direction: column; */
             justify-content: center;
+
         }
         .form-container {
             background-color: #ffffff;
             color: #8A2BE2;
-            padding: 40px;
-            border-radius: 10px;
+            padding: 2%;
+            margin: 20%;
+            display: center;
+            border-radius: 50px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 50%;
         }
         .form-container input {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+            width: 80%;
+            padding: 20px;
+            margin: 20px 0;
             border: 1px solid #8A2BE2;
             border-radius: 5px;
             font-size: 1em;
@@ -35,14 +40,15 @@
             background-color: #8A2BE2;
             color: #ffffff;
             border: none;
-            padding: 15px;
+            padding: 2%;
+            width: 20%;
             font-size: 1em;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
+            width: 100;
         }
         .form-container button:hover {
-            background-color: #ffffff;
+            background-color: #ffe345;
             color: #8A2BE2;
         }
     </style>
@@ -51,8 +57,8 @@
     <div class="form-container">
         <form onsubmit="return validateForm()">
             <h2>Admin Login</h2>
-            <input type="text" id="username" name="username" placeholder="Username" required>
-            <input type="password" id="password" name="password" placeholder="Password" required>
+            <input type="text" id="username" name="username" placeholder="Username" required><br>
+            <input type="password" id="password" name="password" placeholder="Password" required><br>
             <button type="submit">Login</button>
         </form>
     </div>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - QR_Dance</title>
+    <style>
+        body {
+            background-color: #8A2BE2; /* Viber-like purple */
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .form-container {
+            background-color: #ffffff;
+            color: #8A2BE2;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            margin: auto;
+        }
+        .form-container h2 {
+            margin-top: 0;
+        }
+        .form-container select, .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #8A2BE2;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .form-container button {
+            background-color: #8A2BE2;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .form-container button:hover {
+            background-color: #ffffff;
+            color: #8A2BE2;
+        }
+        .form-container p {
+            margin-top: 20px;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Registration</h1>
+        <form action="/register" method="POST">
+            <select id="role" name="role" required>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="middle_name" placeholder="Middle Name (optional)">
+            <input type="text" name="last_name" placeholder="Last Name" required>
+            <input type="text" name="roll_no" placeholder="Roll No." required>
+            <input type="text" name="address" placeholder="Address" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <button type="submit">Submit</button>
+        </form>
+        <p>Get ready to capture your QR code</p>
+    </div>
+</body>
+</html>

@@ -1,6 +1,10 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
+
+# Temporary storage for registered students and teachers
+students = []
+teachers = []
 
 @app.route('/')
 def home():
@@ -21,6 +25,20 @@ def admin():
 @app.route('/admin/dashboard')
 def admin_dashboard():
     return render_template('login.html')
+
+@app.route('/register_student', methods=['POST'])
+def register_student():
+    student_name = request.form['student_name']
+    student_id = request.form['student_id']
+    students.append({'name': student_name, 'id': student_id})
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/register_teacher', methods=['POST'])
+def register_teacher():
+    teacher_name = request.form['teacher_name']
+    teacher_id = request.form['teacher_id']
+    teachers.append({'name': teacher_name, 'id': teacher_id})
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
