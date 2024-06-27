@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - QR_Dance</title>
+    <title>Admin Login - QR_Dance</title>
     <style>
         body {
-            background-color: #8A2BE2; 
+            background-color: #8A2BE2; /* Viber-like purple */
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: center;
-            padding: 10%;
-            height: 100%;
-            display: center;
-            /* flex-direction: column; */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
-
         }
         .form-container {
             background-color: #ffffff;
             color: #8A2BE2;
-            padding: 2%;
-            margin: 20%;
-            display: center;
-            border-radius: 50px;
+            padding: 40px;
+            border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 50%;
+            width: 300px;
+            margin: auto;
+        }
+        .form-container h2 {
+            margin-top: 0;
         }
         .form-container input {
-            width: 80%;
-            padding: 20px;
-            margin: 20px 0;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
             border: 1px solid #8A2BE2;
             border-radius: 5px;
             font-size: 1em;
@@ -40,40 +40,26 @@
             background-color: #8A2BE2;
             color: #ffffff;
             border: none;
-            padding: 2%;
-            width: 20%;
+            padding: 10px;
             font-size: 1em;
             border-radius: 5px;
             cursor: pointer;
-            width: 100;
+            width: 100%;
         }
         .form-container button:hover {
-            background-color: #ffe345;
+            background-color: #ffffff;
             color: #8A2BE2;
         }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <form onsubmit="return validateForm()">
-            <h2>Admin Login</h2>
-            <input type="text" id="username" name="username" placeholder="Username" required><br>
-            <input type="password" id="password" name="password" placeholder="Password" required><br>
+        <h2>Admin Login</h2>
+        <form action="/admin" method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
     </div>
-
-    <script>
-        function validateForm() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            if (username === 'username' && password === 'password') {
-                window.location.href = '/admin/dashboard';
-            } else {
-                alert('Invalid username or password');
-            }
-            return false; // Prevent form submission
-        }
-    </script>
 </body>
 </html>

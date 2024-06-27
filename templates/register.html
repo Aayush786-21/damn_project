@@ -19,7 +19,7 @@
         .form-container {
             background-color: #ffffff;
             color: #8A2BE2;
-            padding: 80px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 300px;
@@ -28,7 +28,8 @@
         .form-container h2 {
             margin-top: 0;
         }
-        .form-container select, .form-container input {
+        .form-container input,
+        .form-container select {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -52,26 +53,27 @@
         }
         .form-container p {
             margin-top: 20px;
-            color: #ffffff;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <h1>Registration</h1>
+        <h2>Registration</h2>
         <form action="/register" method="POST">
-            <select id="role" name="role" required>
+            <select name="role" required>
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
             </select>
             <input type="text" name="first_name" placeholder="First Name" required>
-            <input type="text" name="middle_name" placeholder="Middle Name (optional)">
+            <input type="text" name="middle_name" placeholder="Middle Name">
             <input type="text" name="last_name" placeholder="Last Name" required>
             <input type="text" name="roll_no" placeholder="Roll No." required>
             <input type="text" name="address" placeholder="Address" required>
             <input type="email" name="email" placeholder="Email Address" required>
             <button type="submit">Submit</button>
         </form>
+        <p>Get ready to capture your QR code.</p>
     </div>
 </body>
 </html>

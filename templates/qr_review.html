@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Review - QR_Dance</title>
+    <title>QR Code Review - QR_Dance</title>
     <style>
         body {
             background-color: #8A2BE2; /* Viber-like purple */
@@ -24,25 +24,23 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 300px;
             margin: auto;
+            text-align: left;
         }
-        img {
-            margin-top: 20px;
+        .qr-container h2 {
+            margin-top: 0;
         }
-        p {
-            color: #ffffff;
-            font-size: 1.2em;
+        .qr-container img {
+            display: block;
+            margin: auto;
+            max-width: 100%;
         }
     </style>
 </head>
 <body>
     <div class="qr-container">
-        <h2>QR Code Review</h2>
-        <p id="details"></p>
-        <img id="qr-code" src="" alt="QR Code">
+        <h2>QR Code Details</h2>
+        <p>{{ details }}</p>
+        <img src="{{ url_for('static', filename=qr_code_url) }}" alt="QR Code">
     </div>
-    <script>
-        document.getElementById('details').innerText = '{{ details }}';
-        document.getElementById('qr-code').src = '{{ qr_code_url }}';
-    </script>
 </body>
-</html>
+</

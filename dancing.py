@@ -3,12 +3,26 @@ import qrcode
 import os
 import random
 import string
+import mysql.connector
 
 app = Flask(__name__)
 
 # Ensure the static folder exists for saving QR codes
 if not os.path.exists('static'):
     os.makedirs('static')
+
+# Database configuration
+db_config = {
+    'user': 'admin',
+    'password': 'StrongP@ssw0rd123!',
+    'host': 'localhost',
+    'database': 'qr_dance'
+}
+
+
+def get_db_connection():
+    connection = mysql.connector.connect(**db_config)
+    return connection
 
 @app.route('/')
 def home():
@@ -63,6 +77,17 @@ def register():
         img = qr.make_image(fill='black', back_color='white')
         qr_code_path = os.path.join('static', f'qr_{unique_id}.png')
         img.save(qr_code_path)
+
+        # Save to database
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            INSERT INTO users (role, first_name, middle_name, last_name, roll_no, address, email, unique_id, qr_code_path)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (role, first_name, middle_name, last_name, roll_no, address, email, unique_id, qr_code_path))
+        connection.commit()
+        cursor.close()
+        connection.close()
 
         return render_template('qr_review.html', details=details, qr_code_url=qr_code_path)
     return render_template('register.html')
