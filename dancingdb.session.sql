@@ -1,6 +1,6 @@
-USE qr_dance;
+-- USE qr_dance;
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     role VARCHAR(50),
     first_name VARCHAR(50),

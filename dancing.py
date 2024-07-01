@@ -4,6 +4,7 @@ import os
 import random
 import string
 import mysql.connector
+import sqlite3
 
 app = Flask(__name__)
 
@@ -12,17 +13,11 @@ if not os.path.exists('static'):
     os.makedirs('static')
 
 # Database configuration
-db_config = {
-    'user': 'admin',
-    'password': 'StrongP@ssw0rd123!',
-    'host': 'localhost',
-    'database': 'qr_dance'
-}
+
+sqliteConnection = sqlite3.connect('sql.db')
 
 
-def get_db_connection():
-    connection = mysql.connector.connect(**db_config)
-    return connection
+
 
 @app.route('/')
 def home():
@@ -79,7 +74,7 @@ def register():
         img.save(qr_code_path)
 
         # Save to database
-        connection = get_db_connection()
+        connection = sqliteConnection()
         cursor = connection.cursor()
         cursor.execute("""
             INSERT INTO users (role, first_name, middle_name, last_name, roll_no, address, email, unique_id, qr_code_path)
