@@ -16,31 +16,56 @@
             flex-direction: column;
             justify-content: center;
         }
-        .qr-container {
+        .details-container {
             background-color: #ffffff;
             color: #8A2BE2;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 300px;
+            width: 400px;
             margin: auto;
             text-align: left;
         }
-        .qr-container h2 {
-            margin-top: 0;
+        .details-container h2 {
+            text-align: center;
         }
-        .qr-container img {
+        .details-container img {
             display: block;
-            margin: auto;
-            max-width: 100%;
+            margin: 20px auto;
+            width: 150px;
+            height: 150px;
+        }
+        .details-container p {
+            margin: 10px 0;
+        }
+        .details-container button {
+            background-color: #8A2BE2;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .details-container button:hover {
+            background-color: #ffffff;
+            color: #8A2BE2;
         }
     </style>
 </head>
 <body>
-    <div class="qr-container">
+    <div class="details-container">
         <h2>QR Code Details</h2>
-        <p>{{ details }}</p>
+        <p><strong>Role:</strong> {{ details['Role'] }}</p>
+        <p><strong>First Name:</strong> {{ details['First Name'] }}</p>
+        <p><strong>Middle Name:</strong> {{ details['Middle Name'] }}</p>
+        <p><strong>Last Name:</strong> {{ details['Last Name'] }}</p>
+        <p><strong>Roll No.:</strong> {{ details['Roll No.'] }}</p>
+        <p><strong>Address:</strong> {{ details['Address'] }}</p>
+        <p><strong>Email:</strong> {{ details['Email'] }}</p>
         <img src="{{ url_for('static', filename=qr_code_url) }}" alt="QR Code">
+        <button onclick="window.location.href='{{ url_for('dashboard') }}'">Back to Login</button>
     </div>
 </body>
-</
+</html>

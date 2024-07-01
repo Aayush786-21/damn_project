@@ -1,9 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request
 import qrcode
 import os
-import random
-import string
-import mysql.connector
 import sqlite3
 
 app = Flask(__name__)
@@ -12,12 +9,27 @@ app = Flask(__name__)
 if not os.path.exists('static'):
     os.makedirs('static')
 
-# Database configuration
+# Database configuration and initialization
+def init_sqlite_db():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role TEXT,
+            first_name TEXT,
+            middle_name TEXT,
+            last_name TEXT,
+            roll_no TEXT UNIQUE,
+            address TEXT,
+            email TEXT,
+            qr_code_path TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-sqliteConnection = sqlite3.connect('sql.db')
-
-
-
+init_sqlite_db()
 
 @app.route('/')
 def home():
@@ -55,9 +67,15 @@ def register():
         address = request.form['address']
         email = request.form['email']
 
-        # Create unique identifier
-        unique_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        details = f"Role: {role}\nFirst Name: {first_name}\nMiddle Name: {middle_name}\nLast Name: {last_name}\nRoll No.: {roll_no}\nAddress: {address}\nEmail: {email}\nUnique ID: {unique_id}"
+        details = {
+            "Role": role,
+            "First Name": first_name,
+            "Middle Name": middle_name,
+            "Last Name": last_name,
+            "Roll No.": roll_no,
+            "Address": address,
+            "Email": email
+        }
 
         # Generate QR Code
         qr = qrcode.QRCode(
@@ -70,21 +88,25 @@ def register():
         qr.make(fit=True)
 
         img = qr.make_image(fill='black', back_color='white')
-        qr_code_path = os.path.join('static', f'qr_{unique_id}.png')
+        qr_code_path = os.path.join('static', f'qr_{roll_no}.png')
         img.save(qr_code_path)
 
         # Save to database
-        connection = sqliteConnection()
-        cursor = connection.cursor()
-        cursor.execute("""
-            INSERT INTO users (role, first_name, middle_name, last_name, roll_no, address, email, unique_id, qr_code_path)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (role, first_name, middle_name, last_name, roll_no, address, email, unique_id, qr_code_path))
-        connection.commit()
-        cursor.close()
-        connection.close()
+        try:
+            conn = sqlite3.connect('sql.db')
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO users (role, first_name, middle_name, last_name, roll_no, address, email, qr_code_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (role, first_name, middle_name, last_name, roll_no, address, email, qr_code_path))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return "Roll number already exists. Please use a unique roll number."
+        finally:
+            cursor.close()
+            conn.close()
 
-        return render_template('qr_review.html', details=details, qr_code_url=qr_code_path)
+        return render_template('qr_review.html', details=details, qr_code_url=f'qr_{roll_no}.png')
     return render_template('register.html')
 
 @app.route('/qr_review')
