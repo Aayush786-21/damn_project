@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #8A2BE2;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ffffff;
+        }
+        th {
+            background-color: #6A0DAD;
+        }
+        td {
+            background-color: #ffffff;
+            color: #8A2BE2;
+        }
+        .scrollable {
+            overflow-x: auto;
+        }
+        .status-red { background-color: red; }
+        .status-green { background-color: green; }
+        .status-blue { background-color: blue; }
+        .status-yellow { background-color: yellow; }
+        .back-button {
+            background-color: #6A0DAD;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .back-button:hover {
+            background-color: #ffffff;
+            color: #8A2BE2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teacher Records</h1>
+    <button class="back-button" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
+    <div class="scrollable">
+        <table>
+            <thead>
+                <tr>
+                    <th>Roll No.</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th colspan="31">Month</th>
+                    <th>Remarks</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <!-- Add more days as needed -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.roll_no }}</td>
+                    <td>{{ record.name }}</td>
+                    <td>{{ record.email }}</td>
+                    <td class="status-{{ record.day_1 }}"></td>
+                    <td class="status-{{ record.day_2 }}"></td>
+                    <td class="status-{{ record.day_3 }}"></td>
+                    <td class="status-{{ record.day_4 }}"></td>
+                    <!-- Add more days as needed -->
+                    <td>{{ record.remarks }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

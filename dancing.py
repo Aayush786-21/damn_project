@@ -13,6 +13,8 @@ if not os.path.exists('static'):
 def init_sqlite_db():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
+    
+    # Create users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,9 +28,33 @@ def init_sqlite_db():
             qr_code_path TEXT
         )
     ''')
+
+    # Create student attendance table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS student_attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_roll_no TEXT,
+            date TEXT,
+            status TEXT,
+            FOREIGN KEY(student_roll_no) REFERENCES users(roll_no)
+        )
+    ''')
+
+    # Create teacher attendance table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS teacher_attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            teacher_roll_no TEXT,
+            date TEXT,
+            status TEXT,
+            FOREIGN KEY(teacher_roll_no) REFERENCES users(roll_no)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
+# Initialize the database
 init_sqlite_db()
 
 @app.route('/')
@@ -112,6 +138,26 @@ def register():
 @app.route('/qr_review')
 def qr_review():
     return render_template('qr_review.html')
+
+@app.route('/student_records')
+def student_records():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT roll_no, first_name || ' ' || last_name as name, email FROM users WHERE role='student'")
+    students = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('student_records.html', students=students)
+
+@app.route('/teacher_records')
+def teacher_records():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT roll_no, first_name || ' ' || last_name as name, email FROM users WHERE role='teacher'")
+    teachers = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('teacher_records.html', teachers=teachers)
 
 if __name__ == '__main__':
     app.run(debug=True)
