@@ -13,8 +13,6 @@ if not os.path.exists('static'):
 def init_sqlite_db():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    
-    # Create users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,33 +26,9 @@ def init_sqlite_db():
             qr_code_path TEXT
         )
     ''')
-
-    # Create student attendance table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS student_attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_roll_no TEXT,
-            date TEXT,
-            status TEXT,
-            FOREIGN KEY(student_roll_no) REFERENCES users(roll_no)
-        )
-    ''')
-
-    # Create teacher attendance table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS teacher_attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            teacher_roll_no TEXT,
-            date TEXT,
-            status TEXT,
-            FOREIGN KEY(teacher_roll_no) REFERENCES users(roll_no)
-        )
-    ''')
-
     conn.commit()
     conn.close()
 
-# Initialize the database
 init_sqlite_db()
 
 @app.route('/')
