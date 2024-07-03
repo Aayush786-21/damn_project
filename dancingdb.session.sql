@@ -9,6 +9,5 @@ CREATE TABLE users (
     roll_no VARCHAR(50),
     address TEXT,
     email VARCHAR(100),
-    unique_id VARCHAR(50),
     qr_code_path VARCHAR(255)
 );

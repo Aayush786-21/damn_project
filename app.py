@@ -134,4 +134,4 @@ def teacher_records():
     return render_template('teacher_records.html', teachers=teachers)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0",debug=True)
