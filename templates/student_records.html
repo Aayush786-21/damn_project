@@ -1,69 +1,68 @@
-<!-- student_records.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Records</title>
+    <title>Student Records - QR_Dance</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #8A2BE2;
+            background-color: #8A2BE2; /* Viber-like purple */
             color: white;
+            font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .table-container {
+            width: 90%;
+            margin: 0 auto;
+            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
         }
         th, td {
             padding: 10px;
-            border: 1px solid #ffffff;
+            border: 1px solid white;
         }
         th {
-            background-color: #6A0DAD;
+            background-color: #4B0082;
         }
         td {
-            background-color: #ffffff;
-            color: #8A2BE2;
+            text-align: center;
         }
-        .scrollable {
-            overflow-x: auto;
+        .absent {
+            background-color: red;
         }
-        .status-red { background-color: red; }
-        .status-green { background-color: green; }
-        .status-blue { background-color: blue; }
-        .status-yellow { background-color: yellow; }
-        .back-button {
-            background-color: #6A0DAD;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
+        .present {
+            background-color: green;
         }
-        .back-button:hover {
-            background-color: #ffffff;
-            color: #8A2BE2;
+        .late {
+            background-color: blue;
+        }
+        .holiday {
+            background-color: yellow;
         }
     </style>
 </head>
 <body>
     <h1>Student Records</h1>
-    <button class="back-button" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
-    <div class="scrollable">
+    <div class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>Roll No.</th>
                     <th>Name</th>
                     <th>Email</th>
-                    {% for i in range(1, 32) %}
-                    <th>{{ i }}</th>
-                    {% endfor %}
+                    <!-- Dynamically generated month and day headers -->
                     <th>Remarks</th>
                 </tr>
             </thead>
@@ -71,10 +70,13 @@
                 {% for record in records %}
                 <tr>
                     <td>{{ record.roll_no }}</td>
-                    <td>{{ record.name }}</td>
+                    <td>{{ record.first_name }} {{ record.middle_name }} {{ record.last_name }}</td>
                     <td>{{ record.email }}</td>
-                    {% for i in range(1, 32) %}
-                    <td class="status-{{ record.attendance[i] if i in record.attendance else 'none' }}"></td>
+                    {% for month in record.attendance %}
+                        <td>{{ month }}</td>
+                        {% for day in record.attendance[month] %}
+                            <td class="{{ record.attendance[month][day] }}">{{ record.attendance[month][day] }}</td>
+                        {% endfor %}
                     {% endfor %}
                     <td>{{ record.remarks }}</td>
                 </tr>

@@ -1,7 +1,10 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 import qrcode
 import os
 import sqlite3
+import cv2
+import numpy as np
+from pyzbar.pyzbar import decode
 
 app = Flask(__name__)
 
@@ -24,6 +27,14 @@ def init_sqlite_db():
             address TEXT,
             email TEXT,
             qr_code_path TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            roll_no TEXT,
+            date TEXT,
+            status TEXT
         )
     ''')
     conn.commit()
@@ -109,29 +120,51 @@ def register():
         return render_template('qr_review.html', details=details, qr_code_url=f'qr_{roll_no}.png')
     return render_template('register.html')
 
-@app.route('/qr_review')
-def qr_review():
-    return render_template('qr_review.html')
-
 @app.route('/student_records')
 def student_records():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT roll_no, first_name || ' ' || last_name as name, email FROM users WHERE role='student'")
-    students = cursor.fetchall()
+    cursor.execute('SELECT * FROM users WHERE role="student"')
+    records = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('student_records.html', students=students)
+    return render_template('student_records.html', records=records)
 
-@app.route('/teacher_records')
-def teacher_records():
+def mark_attendance(roll_no, status):
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT roll_no, first_name || ' ' || last_name as name, email FROM users WHERE role='teacher'")
-    teachers = cursor.fetchall()
+    cursor.execute("""
+        INSERT INTO attendance (roll_no, date, status)
+        VALUES (?, DATE('now'), ?)
+    """, (roll_no, status))
+    conn.commit()
     cursor.close()
     conn.close()
-    return render_template('teacher_records.html', teachers=teachers)
+
+@app.route('/read_qr', methods=['POST'])
+def read_qr():
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        decoded_objects = decode(frame)
+        for obj in decoded_objects:
+            data = obj.data.decode('utf-8')
+            roll_no = data.split('Roll No.: ')[1].split('\\n')[0]
+            mark_attendance(roll_no, 'present')
+            cap.release()
+            cv2.destroyAllWindows()
+            return jsonify({"status": "success", "roll_no": roll_no})
+
+        cv2.imshow('QR Code Scanner', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return jsonify({"status": "failed"})
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",debug=True)
+    app.run(debug=True)
