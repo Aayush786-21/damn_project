@@ -130,6 +130,16 @@ def student_records():
     conn.close()
     return render_template('student_records.html', records=records)
 
+@app.route('/teacher_records')
+def teacher_records():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE role="teacher"')
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('teacher_records.html', records=records)
+
 def mark_attendance(roll_no, status):
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()

@@ -9,80 +9,77 @@
             background-color: #8A2BE2; /* Viber-like purple */
             color: white;
             font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            padding: 20px;
         }
         h1 {
-            font-size: 2em;
+            text-align: center;
             margin-bottom: 20px;
-        }
-        .table-container {
-            width: 90%;
-            margin: 0 auto;
-            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
         }
         th, td {
+            border: 1px solid #ffffff;
             padding: 10px;
-            border: 1px solid white;
+            text-align: center;
         }
         th {
             background-color: #4B0082;
         }
-        td {
-            text-align: center;
-        }
-        .absent {
-            background-color: red;
-        }
-        .present {
-            background-color: green;
-        }
-        .late {
-            background-color: blue;
-        }
-        .holiday {
-            background-color: yellow;
+        .remarks {
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <h1>Student Records</h1>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Roll No.</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <!-- Dynamically generated month and day headers -->
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in records %}
-                <tr>
-                    <td>{{ record.roll_no }}</td>
-                    <td>{{ record.first_name }} {{ record.middle_name }} {{ record.last_name }}</td>
-                    <td>{{ record.email }}</td>
-                    {% for month in record.attendance %}
-                        <td>{{ month }}</td>
-                        {% for day in record.attendance[month] %}
-                            <td class="{{ record.attendance[month][day] }}">{{ record.attendance[month][day] }}</td>
+    <table>
+        <thead>
+            <tr>
+                <th>Roll No.</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Attendance</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record[4] }}</td>
+                <td>{{ record[2] }} {{ record[3] }} {{ record[1] }}</td>
+                <td>{{ record[6] }}</td>
+                <td>
+                    <div style="display: flex; overflow-x: auto;">
+                        {% for day in range(1, 32) %}
+                        <div style="padding: 5px;">
+                            <div>{{ day }}</div>
+                            <div>
+                                {% set status = 'N/A' %}
+                                {% for att in attendance if att[0] == record[4] and att[1].split('-')[2] == day|string %}
+                                    {% set status = att[2] %}
+                                {% endfor %}
+                                {% if status == 'present' %}
+                                    <span style="color: green;">P</span>
+                                {% elif status == 'absent' %}
+                                    <span style="color: red;">A</span>
+                                {% elif status == 'late' %}
+                                    <span style="color: blue;">L</span>
+                                {% else %}
+                                    <span>{{ status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endfor %}
-                    {% endfor %}
-                    <td>{{ record.remarks }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    </div>
+                </td>
+                <td><input type="text" class="remarks" placeholder="Add remarks"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
