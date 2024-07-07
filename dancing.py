@@ -140,16 +140,25 @@ def teacher_records():
     conn.close()
     return render_template('teacher_records.html', records=records)
 
-def mark_attendance(roll_no, status):
+@app.route('/mark_attendance', methods=['POST'])
+def mark_attendance():
+    data = request.get_json()
+    roll_no = data.get('roll_no')
+    date = data.get('date')
+    status = data.get('status')
+
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO attendance (roll_no, date, status)
-        VALUES (?, DATE('now'), ?)
-    """, (roll_no, status))
+        VALUES (?, ?, ?)
+    """, (roll_no, date, status))
     conn.commit()
     cursor.close()
     conn.close()
+
+    return jsonify({"message": "Attendance marked successfully"}), 200
+
 
 @app.route('/read_qr', methods=['GET', 'POST'])
 def read_qr():

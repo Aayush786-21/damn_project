@@ -71,7 +71,7 @@
             const data = JSON.parse(qrText);
             const currentDate = new Date().toISOString().split('T')[0];
 
-            fetch('/mark_attendance', {
+            fetch('/mark_teacher_attendance', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -84,12 +84,10 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert('Attendance marked successfully');
+                alert('Teacher attendance marked successfully: ' + data.message);
             })
             .catch((error) => {
                 console.error('Error:', error);
+                alert('Error marking teacher attendance.');
             });
         }
-    </script>
-</body>
-</html>

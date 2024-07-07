@@ -84,10 +84,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert('Attendance marked successfully');
+                alert('Attendance marked successfully: ' + data.message);
             })
             .catch((error) => {
                 console.error('Error:', error);
+                alert('Error marking attendance.');
             });
         }
     </script>
