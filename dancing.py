@@ -8,7 +8,7 @@ from pyzbar.pyzbar import decode
 
 app = Flask(__name__)
 
-# Ensure the static folder exists for saving QR codes
+#static folder exists for saving QR codes
 if not os.path.exists('static'):
     os.makedirs('static')
 
