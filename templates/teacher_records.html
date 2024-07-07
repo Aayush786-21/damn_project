@@ -3,80 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Records - QR_Dance</title>
+    <title>Teacher Records</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #8A2BE2; /* Viber-like purple */
+            background-color: rgb(155, 157, 158);
             color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
             text-align: center;
-            margin-bottom: 20px;
         }
         table {
             width: 100%;
+            margin: auto;
+            background-color: rgb(51, 78, 97);
+            color: white;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
         th, td {
-            border: 1px solid #ffffff;
-            padding: 10px;
+            border: 1px solid white;
+            padding: 8px;
             text-align: center;
         }
         th {
-            background-color: #4B0082;
-        }
-        .remarks {
-            width: 100%;
+            background-color: #6f42c1;
         }
     </style>
 </head>
 <body>
-    <h1>Teacher Records</h1>
+    <h1>Student Records</h1>
     <table>
         <thead>
             <tr>
                 <th>Roll No.</th>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Attendance</th>
+                <th colspan="31">Attendance</th>
                 <th>Remarks</th>
             </tr>
         </thead>
         <tbody>
             {% for record in records %}
             <tr>
-                <td>{{ record[4] }}</td>
-                <td>{{ record[2] }} {{ record[3] }} {{ record[1] }}</td>
-                <td>{{ record[6] }}</td>
-                <td>
-                    <div style="display: flex; overflow-x: auto;">
-                        {% for day in range(1, 32) %}
-                        <div style="padding: 5px;">
-                            <div>{{ day }}</div>
-                            <div>
-                                {% set status = 'N/A' %}
-                                {% for att in attendance if att[0] == record[4] and att[1].split('-')[2] == day|string %}
-                                    {% set status = att[2] %}
-                                {% endfor %}
-                                {% if status == 'present' %}
-                                    <span style="color: green;">P</span>
-                                {% elif status == 'absent' %}
-                                    <span style="color: red;">A</span>
-                                {% elif status == 'late' %}
-                                    <span style="color: blue;">L</span>
-                                {% else %}
-                                    <span>{{ status }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </td>
-                <td><input type="text" class="remarks" placeholder="Add remarks"></td>
+                <td>{{ record[5] }}</td>
+                <td>{{ record[2] }} {{ record[3] }} {{ record[4] }}</td>
+                <td>{{ record[7] }}</td>
+                {% for day in range(1, 32) %}
+                <td>N/A</td>
+                {% endfor %}
+                <td><input type="text" placeholder="Add remarks"></td>
             </tr>
             {% endfor %}
         </tbody>

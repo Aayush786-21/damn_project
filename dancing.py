@@ -151,30 +151,35 @@ def mark_attendance(roll_no, status):
     cursor.close()
     conn.close()
 
-@app.route('/read_qr', methods=['POST'])
+@app.route('/read_qr', methods=['GET', 'POST'])
 def read_qr():
-    cap = cv2.VideoCapture(0)
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    if request.method == 'POST':
+        cap = cv2.VideoCapture(0)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        decoded_objects = decode(frame)
-        for obj in decoded_objects:
-            data = obj.data.decode('utf-8')
-            roll_no = data.split('Roll No.: ')[1].split('\\n')[0]
-            mark_attendance(roll_no, 'present')
-            cap.release()
-            cv2.destroyAllWindows()
-            return jsonify({"status": "success", "roll_no": roll_no})
+            decoded_objects = decode(frame)
+            for obj in decoded_objects:
+                data = obj.data.decode('utf-8')
+                details = json.loads(data)
+                roll_no = details.get('Roll No.')
+                if roll_no:
+                    mark_attendance(roll_no, 'present')
+                    cap.release()
+                    cv2.destroyAllWindows()
+                    return jsonify({"status": "success", "roll_no": roll_no})
 
-        cv2.imshow('QR Code Scanner', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            cv2.imshow('QR Code Scanner', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    cap.release()
-    cv2.destroyAllWindows()
-    return jsonify({"status": "failed"})
+        cap.release()
+        cv2.destroyAllWindows()
+        return jsonify({"status": "failed"})
+
+    return render_template('read_qr.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
