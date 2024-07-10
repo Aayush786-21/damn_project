@@ -26,10 +26,54 @@
         th {
             background-color: #6f42c1;
         }
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+        }
+        .class-label {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .present {
+            background-color: green;
+        }
+        .absent {
+            background-color: red;
+        }
     </style>
 </head>
 <body>
-    <h1>Student Records</h1>
+    <div class="top-section">
+        <h1>Student Records</h1>
+        <div class="class-label">BCA VI Sem</div>
+    </div>
+
+    <!-- Month and year selectors -->
+    <form id="monthYearForm">
+        <label for="month">Month:</label>
+        <select id="month" name="month">
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07" selected>July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+
+        <label for="year">Year:</label>
+        <input type="number" id="year" name="year" value="{{ current_year }}">
+
+        <button type="submit">View Records</button>
+    </form>
+
     <table>
         <thead>
             <tr>
@@ -43,16 +87,27 @@
         <tbody>
             {% for record in records %}
             <tr>
-                <td>{{ record[5] }}</td>
-                <td>{{ record[2] }} {{ record[3] }} {{ record[4] }}</td>
-                <td>{{ record[7] }}</td>
+                <td>{{ record.roll_no }}</td>
+                <td>{{ record.first_name }} {{ record.middle_name }} {{ record.last_name }}</td>
+                <td>{{ record.email }}</td>
                 {% for day in range(1, 32) %}
-                <td>N/A</td>
+                <td class="{% if record.attendance[day-1] == 'P' %}present{% elif record.attendance[day-1] == 'A' %}absent{% else %}N/A{% endif %}">
+                    {{ record.attendance[day-1] if record.attendance[day-1] != 'N/A' else 'N/A' }}
+                </td>
                 {% endfor %}
                 <td><input type="text" placeholder="Add remarks"></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        document.getElementById('monthYearForm').onsubmit = function() {
+            var month = document.getElementById('month').value;
+            var year = document.getElementById('year').value;
+            window.location.href = "/student_records?month=" + month + "&year=" + year;
+            return false;
+        };
+    </script>
 </body>
 </html>

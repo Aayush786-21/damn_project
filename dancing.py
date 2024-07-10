@@ -5,10 +5,11 @@ import sqlite3
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
+import datetime
 
 app = Flask(__name__)
 
-#static folder exists for saving QR codes
+# Static folder exists for saving QR codes
 if not os.path.exists('static'):
     os.makedirs('static')
 
@@ -88,6 +89,9 @@ def register():
             "Email": email
         }
 
+        # Ensure details are serialized correctly to JSON
+        details_json = json.dumps(details)
+
         # Generate QR Code
         qr = qrcode.QRCode(
             version=1,
@@ -95,7 +99,7 @@ def register():
             box_size=10,
             border=4,
         )
-        qr.add_data(details)
+        qr.add_data(details_json)
         qr.make(fit=True)
 
         img = qr.make_image(fill='black', back_color='white')
@@ -122,13 +126,41 @@ def register():
 
 @app.route('/student_records')
 def student_records():
+    month = request.args.get('month', datetime.datetime.now().strftime('%m'))
+    year = request.args.get('year', datetime.datetime.now().strftime('%Y'))
+
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE role="student"')
-    records = cursor.fetchall()
+    cursor.execute('''
+        SELECT users.roll_no, users.first_name, users.middle_name, users.last_name, users.email,
+               attendance.date, attendance.status
+        FROM users 
+        LEFT JOIN attendance ON users.roll_no = attendance.roll_no 
+        WHERE users.role = "student" AND strftime('%m', attendance.date) = ? AND strftime('%Y', attendance.date) = ?
+        ORDER BY users.roll_no, attendance.date
+    ''', (month, year))
+    rows = cursor.fetchall()
+
+    records = {}
+    for row in rows:
+        roll_no = row[0]
+        if roll_no not in records:
+            records[roll_no] = {
+                'roll_no': row[0],
+                'first_name': row[1],
+                'middle_name': row[2],
+                'last_name': row[3],
+                'email': row[4],
+                'attendance': ['N/A'] * 31
+            }
+        if row[5]:
+            day = int(row[5].split('-')[2])
+            records[roll_no]['attendance'][day-1] = row[6]
+
     cursor.close()
     conn.close()
-    return render_template('student_records.html', records=records)
+
+    return render_template('student_records.html', records=records.values(), current_year=datetime.datetime.now().year)
 
 @app.route('/teacher_records')
 def teacher_records():
@@ -158,37 +190,6 @@ def mark_attendance():
     conn.close()
 
     return jsonify({"message": "Attendance marked successfully"}), 200
-
-
-@app.route('/read_qr', methods=['GET', 'POST'])
-def read_qr():
-    if request.method == 'POST':
-        cap = cv2.VideoCapture(0)
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            decoded_objects = decode(frame)
-            for obj in decoded_objects:
-                data = obj.data.decode('utf-8')
-                details = json.loads(data)
-                roll_no = details.get('Roll No.')
-                if roll_no:
-                    mark_attendance(roll_no, 'present')
-                    cap.release()
-                    cv2.destroyAllWindows()
-                    return jsonify({"status": "success", "roll_no": roll_no})
-
-            cv2.imshow('QR Code Scanner', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
-        return jsonify({"status": "failed"})
-
-    return render_template('read_qr.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

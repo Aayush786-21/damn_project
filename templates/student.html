@@ -68,28 +68,33 @@
         }
 
         function handleQRCode(qrText) {
-            const data = JSON.parse(qrText);
-            const currentDate = new Date().toISOString().split('T')[0];
+            try {
+                const data = JSON.parse(qrText);
+                const currentDate = new Date().toISOString().split('T')[0];
 
-            fetch('/mark_attendance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    roll_no: data['Roll No.'],
-                    date: currentDate,
-                    status: 'present'
+                fetch('/mark_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        roll_no: data['Roll No.'],
+                        date: currentDate,
+                        status: 'present'
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Attendance marked successfully: ' + data.message);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('Error marking attendance.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    alert('Attendance marked successfully for ' + data.message);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Error marking attendance: ' + error);
+                });
+            } catch (error) {
+                console.error('Error parsing QR code:', error);
+                alert('Error reading QR code: ' + error);
+            }
         }
     </script>
 </body>
