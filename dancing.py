@@ -194,3 +194,7 @@ def mark_attendance():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+#just to commit git using terminal 
