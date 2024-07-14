@@ -24,6 +24,7 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - Student Records Page: Displays attendance records for students.
 - Teacher Records Page: Displays records for teachers.
 - Flowcharts: Include flowcharts to depict the user journey and interactions within the application.
+
 **Component Design**
 - dancing.py: Main application file handling routes and logic.
 - HTML Templates: ghar.html , student.html , admin.html , login.html , teacher.html , register.html , qr_review.html , student_records.html , teacher_records.html .
@@ -31,28 +32,35 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - Camera Integration: Using cv2  for QR code scanning.
 - QR Code Generation: Using qrcode  library to generate QR codes.
 - Interaction Between Components: Describe how different components interact with each other to achieve the desired functionality.
+
 **Data Design**
 - User Table: Stores user information including role, name, roll number, address, email, and QR code path.
 - Attendance Table: Stores attendance records with roll number, date, and status.
+
 **Security Considerations**
 - Authentication: Admin login with username and password.
 - Data Validation: Ensuring unique roll numbers and valid data entries.
 - Secure Storage: Storing QR codes and user data securely.
+
 **Performance Metrics**
 - Response Time: Ensuring quick generation and scanning of QR codes.
 - Scalability: Ability to handle multiple users and large attendance data.
+
 **Testing Strategy**
 - Unit Testing: Testing individual components and functions.
 - Integration Testing: Ensuring all components work together seamlessly.
+
 **Third-Party Libraries and Tools**
 - Flask: Web framework for building the application.
 - qrcode: Library for generating QR codes.
 - cv2: OpenCV library for camera integration.
 - sqlite3: Database for storing user and attendance data.
 - Jenkins: For continuous integration and deployment.
+
 **Maintenance and Support**
 - Version Control: Maintain a version history within the document.
 - Updates: Regular updates and improvements based on user feedback.
+
 **Future Enhancements and Scalability**
 - Feature Expansion: Potential new features and improvements.
 - Scalability: Plans for scaling the application to handle more users and data.
