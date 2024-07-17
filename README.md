@@ -14,6 +14,7 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - Phase 9: Enhanced student_records.html  with new designs and features.
 - Phase 10: Added Jenkinsfile  for continuous integration.
 - phase 11: Added DESCRIPTION.MD for better understanding of the application.
+- phase 12: Added session to get rid of vunerablities.
 
 **User Interface Design**
 - Home Page (ghar.html): Landing page with navigation to student, teacher, and admin sections.
