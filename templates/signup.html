@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - QR_Dance</title>
+    <title>Admin Signup - QR_Dance</title>
     <style>
         body {
-            background-color: #8A2BE2; /* Viber-like purple */
+            background-color: #8A2BE2;
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
@@ -49,23 +49,16 @@
         .form-container button:hover {
             background-color: #7A1BB2;
         }
-        .form-container a {
-            display: block;
-            margin-top: 10px;
-            color: #8A2BE2;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <h2>Admin Login</h2>
-        <form action="{{ url_for('admin') }}" method="POST">
+        <h2>Admin Signup</h2>
+        <form action="{{ url_for('admin_signup') }}" method="POST">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
+            <button type="submit">Sign Up</button>
         </form>
-        <a href="{{ url_for('admin_signup') }}">Sign Up</a>
     </div>
 </body>
 </html>

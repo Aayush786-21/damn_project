@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, session
 import qrcode
 import os
 import sqlite3
@@ -7,8 +7,11 @@ import numpy as np
 from pyzbar.pyzbar import decode
 import datetime
 import json
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Replace with your secret key
 
 # Static folder exists for saving QR codes
 if not os.path.exists('static'):
@@ -39,6 +42,13 @@ def init_sqlite_db():
             status TEXT
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admin (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -61,11 +71,52 @@ def admin():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == 'username' and password == 'password':
+        
+        conn = sqlite3.connect('sql.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT password FROM admin WHERE username = ?', (username,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if row and check_password_hash(row[0], password):
+            session['username'] = username  # Set session variable
             return redirect(url_for('dashboard'))
+        else:
+            return "Incorrect username or password", 401
+    
     return render_template('admin.html')
 
+@app.route('/admin_signup', methods=['GET', 'POST'])
+def admin_signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = generate_password_hash(request.form['password'])
+        
+        conn = sqlite3.connect('sql.db')
+        cursor = conn.cursor()
+        try:
+            cursor.execute('INSERT INTO admin (username, password) VALUES (?, ?)', (username, password))
+            conn.commit()
+            return redirect(url_for('admin'))
+        except sqlite3.IntegrityError:
+            return "Username already taken", 400
+        finally:
+            cursor.close()
+            conn.close()
+    
+    return render_template('signup.html')
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('admin'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/dashboard')
+@login_required
 def dashboard():
     return render_template('login.html')
 
@@ -126,6 +177,7 @@ def register():
     return render_template('register.html')
 
 @app.route('/student_records')
+@login_required
 def student_records():
     month = request.args.get('month', datetime.datetime.now().strftime('%m'))
     year = request.args.get('year', datetime.datetime.now().strftime('%Y'))
@@ -164,6 +216,7 @@ def student_records():
     return render_template('student_records.html', records=records.values(), current_year=datetime.datetime.now().year)
 
 @app.route('/teacher_records')
+@login_required
 def teacher_records():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
@@ -174,6 +227,7 @@ def teacher_records():
     return render_template('teacher_records.html', records=records)
 
 @app.route('/mark_attendance', methods=['POST'])
+@login_required
 def mark_attendance():
     data = request.get_json()
     roll_no = data.get('roll_no')
@@ -194,8 +248,3 @@ def mark_attendance():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-    
