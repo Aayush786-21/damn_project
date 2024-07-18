@@ -60,6 +60,28 @@
             background-color: #8A2BE2;
             color: #ffe345;
         }
+        .signup-link {
+            background-color: #ffffff;
+            color: #8A2BE2;
+            border: none;
+            padding: 1%;
+            width: 20%;
+            font-size: 1.5em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            text-decoration: none;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+                       
+        .signup-link:hover {
+            background-color: #8A2BE2;
+            color: #ffe345;
+        }
+        
     </style>
 </head>
 <body>
@@ -70,6 +92,7 @@
     </div>
     <div>
         <a href="{{ url_for('register') }}" class="register-button">Register New Students and Teachers</a>
+        <a href="{{ url_for('admin_signup') }}" class="signup-link">Sign Up</a>
     </div>
 </body>
 </html>
