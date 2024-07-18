@@ -11,13 +11,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Replace with your secret key
+app.secret_key = 'your_secret_key_here'
 
-# Static folder exists for saving QR codes
 if not os.path.exists('static'):
     os.makedirs('static')
 
-# Database configuration and initialization
 def init_sqlite_db():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
@@ -80,7 +78,7 @@ def admin():
         conn.close()
         
         if row and check_password_hash(row[0], password):
-            session['username'] = username  # Set session variable
+            session['username'] = username
             return redirect(url_for('dashboard'))
         else:
             return "Incorrect username or password", 401
@@ -141,7 +139,7 @@ def register():
             "Email": email
         }
 
-        # Ensure details are serialized correctly to JSON
+        
         details_json = json.dumps(details)
 
         # Generate QR Code
