@@ -1,72 +1,85 @@
+# QR Dance
 
-**Introduction**
-In today's fast-paced world, efficient and accurate attendance tracking is crucial for educational institutions and companies alike. Traditional methods of attendance management often prove to be time-consuming, error-prone, and cumbersome. To address these challenges, we have developed QR Dance, an innovative web application that leverages QR code technology to streamline the process of attendance tracking. QR Dance is designed to offer a seamless and intuitive experience for students, teachers, and administrators. By generating personalized QR codes, users can quickly and effortlessly record their attendance, ensuring precise and timely data collection. The application features a robust system that captures and timestamps QR code scans, allowing for real-time monitoring and analysis of attendance records. The application is accessible through a user-friendly interface where students and teachers can generate their unique QR codes by entering their name and roll number. These codes are then used daily to mark attendance via a system camera. Administrators have access to a comprehensive dashboard that displays attendance data in an easily interpretable format, highlighting punctuality and tardiness with distinct color codes. QR Dance also includes a premium feature, offering a dark mode for enhanced user experience, available for a one-time purchase through the eSewa payment system. Developed using Python and the Flask framework, and built in the vs code, QR Dance is a testament to modern web development capabilities and innovative problem-solving. Through QR Dance, we aim to empower institutions with a reliable, efficient, and user-friendly solution for attendance management, enhancing productivity and ensuring accurate record-keeping.
+QR Dance is a Python Flask-based application designed to manage student attendance using QR codes. This project allows administrators to register students and teachers, capture attendance via QR codes, and view attendance records. 
 
-**System Architecture**
-- Phase 1: Initial setup with dancing.py , student.html , admin.html , login.html , and teacher.html .
-- Phase 2: Added register.html .
-- Phase 3: Added qr_review.html .
-- Phase 4: Integrated qr_review.html  route and added SQLite database.
-- Phase 5: Set up virtual environment.
-- Phase 6: Added student_records.html  and teacher_records.html .
-- Phase 7: Integrated camera using cv2 .
-- Phase 8: Added QR code reader functionality.
-- Phase 9: Enhanced student_records.html  with new designs and features.
-- Phase 10: Added Jenkinsfile  for continuous integration.
-- phase 11: Added DESCRIPTION.MD for better understanding of the application.
-- phase 12: Added session to get rid of vunerablities.
-- phase 13: Redesigned register.html and implemented "unique roll no."
-- phase 14: Added data encryption algorithm. 
+## Features
 
-**User Interface Design**
-- Home Page (ghar.html): Landing page with navigation to student, teacher, and admin sections.
-- Student Page: Interface for students to generate and scan QR codes.
-- Teacher Page: Interface for teachers to manage attendance.
-- Admin Page: Login and dashboard for administrators to monitor attendance data.
-- Register Page: Form for new users to register and generate QR codes.
-- QR Review Page: Displays generated QR code and user details.
-- Student Records Page: Displays attendance records for students.
-- Teacher Records Page: Displays records for teachers.
-- Flowcharts: Include flowcharts to depict the user journey and interactions within the application.
+- Register students and teachers
+- Capture attendance via QR codes
+- View attendance records by month and year
+- User-friendly interface with Bootstrap styling
 
-**Component Design**
-- dancing.py: Main application file handling routes and logic.
-- HTML Templates: ghar.html , student.html , admin.html , login.html , teacher.html , register.html , qr_review.html , student_records.html , teacher_records.html .
-- Database: SQLite database for storing user and attendance data.
-- Camera Integration: Using cv2  for QR code scanning.
-- QR Code Generation: Using qrcode  library to generate QR codes.
-- Interaction Between Components: Describe how different components interact with each other to achieve the desired functionality.
+## Prerequisites
 
-**Data Design**
-- User Table: Stores user information including role, name, roll number, address, email, and QR code path.
-- Attendance Table: Stores attendance records with roll number, date, and status.
+- Python 3.x
+- Flask
+- OpenCV
+- SQLite3
+- Bootstrap
 
-**Security Considerations**
-- Authentication: Admin login with username and password.
-- Data Validation: Ensuring unique roll numbers and valid data entries.
-- Secure Storage: Storing QR codes and user data securely.
+## Installation
 
-**Performance Metrics**
-- Response Time: Ensuring quick generation and scanning of QR codes.
-- Scalability: Ability to handle multiple users and large attendance data.
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/your-username/qr_dance.git
+    cd qr_dance
+    ```
 
-**Testing Strategy**
-- Unit Testing: Testing individual components and functions.
-- Integration Testing: Ensuring all components work together seamlessly.
+2. Create and activate a virtual environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
 
-**Third-Party Libraries and Tools**
-- Flask: Web framework for building the application.
-- qrcode: Library for generating QR codes.
-- cv2: OpenCV library for camera integration.
-- sqlite3: Database for storing user and attendance data.
-- Jenkins: For continuous integration and deployment.
+3. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-**Maintenance and Support**
-- Version Control: Maintain a version history within the document.
-- Updates: Regular updates and improvements based on user feedback.
+4. Set up the database:
+    ```bash
+    python setup_database.py
+    ```
 
-**Future Enhancements and Scalability**
-- Feature Expansion: Potential new features and improvements.
-- Scalability: Plans for scaling the application to handle more users and data.
+## Usage
+
+1. Run the Flask application:
+    ```bash
+    flask run
+    ```
+
+2. Open your web browser and go to `http://127.0.0.1:5000`.
+
+3. Use the application to register users, capture attendance, and view records.
+
+## Project Structure
+
+- `app.py`: Main application file
+- `templates/`: HTML templates
+  - `index.html`: Home page
+  - `register.html`: Registration page for students and teachers
+  - `student_records.html`: Page to view student attendance records
+  - `admin.html`: Admin panel (to be customized as per requirements)
+- `static/`: Static files (CSS, JavaScript)
+- `setup_database.py`: Script to set up the SQLite database
+
+## Screenshots
+
+### Home Page
+![Home Page]
+![alt text](<Screenshot from 2024-07-17 13-49-10.png>)
+### Register Page
+![Register Page]
+![alt text](<Screenshot from 2024-07-17 13-51-22.png>)
+### Student Records Page
+![Student Records Page]
+![alt text](<Screenshot from 2024-07-17 13-52-16.png>)
+## Contributing
+
+Feel free to submit issues and pull requests. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+This project is licensed under the MIT License.
 
 
