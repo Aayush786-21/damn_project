@@ -9,12 +9,43 @@ import datetime
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from cryptography.fernet import Fernet, InvalidToken
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-if not os.path.exists('static'):
-    os.makedirs('static')
+# Encryption key setup
+KEY_FILE = 'secret.key'
+
+def generate_key():
+    return Fernet.generate_key()
+
+def save_key(key, filename=KEY_FILE):
+    with open(filename, 'wb') as key_file:
+        key_file.write(key)
+
+def load_key(filename=KEY_FILE):
+    with open(filename, 'rb') as key_file:
+        return key_file.read()
+
+# Check if the key file exists, otherwise generate and save a new key
+if not os.path.exists(KEY_FILE):
+    encryption_key = generate_key()
+    save_key(encryption_key)
+else:
+    encryption_key = load_key()
+
+def encrypt_data(data, key):
+    fernet = Fernet(key)
+    return fernet.encrypt(data.encode())
+
+def decrypt_data(encrypted_data, key):
+    fernet = Fernet(key)
+    try:
+        return fernet.decrypt(encrypted_data).decode()
+    except InvalidToken as e:
+        print(f"Decryption error: {e}")
+        return None
 
 def init_sqlite_db():
     conn = sqlite3.connect('sql.db')
@@ -122,12 +153,12 @@ def dashboard():
 def register():
     if request.method == 'POST':
         role = request.form['role']
-        first_name = request.form['first_name']
-        middle_name = request.form['middle_name']
-        last_name = request.form['last_name']
-        roll_no = request.form['roll_no']
-        address = request.form['address']
-        email = request.form['email']
+        first_name = encrypt_data(request.form['first_name'], encryption_key)
+        middle_name = encrypt_data(request.form['middle_name'], encryption_key)
+        last_name = encrypt_data(request.form['last_name'], encryption_key)
+        roll_no = encrypt_data(request.form['roll_no'], encryption_key)
+        address = encrypt_data(request.form['address'], encryption_key)
+        email = encrypt_data(request.form['email'], encryption_key)
 
         details = {
             "Role": role,
@@ -139,7 +170,6 @@ def register():
             "Email": email
         }
 
-        
         details_json = json.dumps(details)
 
         # Generate QR Code
@@ -198,10 +228,10 @@ def student_records():
         if roll_no not in records:
             records[roll_no] = {
                 'roll_no': row[0],
-                'first_name': row[1],
-                'middle_name': row[2],
-                'last_name': row[3],
-                'email': row[4],
+                'first_name': decrypt_data(row[1], encryption_key),
+                'middle_name': decrypt_data(row[2], encryption_key),
+                'last_name': decrypt_data(row[3], encryption_key),
+                'email': decrypt_data(row[4], encryption_key),
                 'attendance': ['N/A'] * 31
             }
         if row[5]:
