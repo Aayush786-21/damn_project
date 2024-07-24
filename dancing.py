@@ -5,14 +5,18 @@ import sqlite3
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
-import datetime
+from datetime import datetime
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from cryptography.fernet import Fernet, InvalidToken
+import logging
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Encryption key setup
 KEY_FILE = 'secret.key'
@@ -25,10 +29,14 @@ def save_key(key, filename=KEY_FILE):
         key_file.write(key)
 
 def load_key(filename=KEY_FILE):
-    with open(filename, 'rb') as key_file:
-        return key_file.read()
+    try:
+        with open(filename, 'rb') as key_file:
+            return key_file.read()
+    except FileNotFoundError:
+        logging.error(f"Key file {filename} not found.")
+        return None
 
-# Check if the key file exists, otherwise generate and save a new key
+# Load encryption key
 if not os.path.exists(KEY_FILE):
     encryption_key = generate_key()
     save_key(encryption_key)
@@ -37,46 +45,55 @@ else:
 
 def encrypt_data(data, key):
     fernet = Fernet(key)
-    return fernet.encrypt(data.encode())
+    encrypted_data = fernet.encrypt(data.encode())
+    logging.debug(f"Encrypted data: {encrypted_data}")
+    return encrypted_data
 
 def decrypt_data(encrypted_data, key):
     fernet = Fernet(key)
     try:
-        return fernet.decrypt(encrypted_data).decode()
+        decrypted_data = fernet.decrypt(encrypted_data).decode()
+        logging.debug(f"Decrypted data: {decrypted_data}")
+        return decrypted_data
     except InvalidToken as e:
-        print(f"Decryption error: {e}")
+        logging.error(f"Decryption error (InvalidToken): {e}")
+        logging.error(f"Problematic encrypted data: {encrypted_data}")
+        return None
+    except Exception as e:
+        logging.error(f"Unexpected decryption error: {e}")
+        logging.error(f"Problematic encrypted data: {encrypted_data}")
         return None
 
 def init_sqlite_db():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role TEXT,
-            first_name TEXT,
-            middle_name TEXT,
-            last_name TEXT,
-            roll_no TEXT UNIQUE,
-            address TEXT,
-            email TEXT,
-            qr_code_path TEXT
-        )
+    CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role BLOB,
+    first_name BLOB,
+    middle_name BLOB,
+    last_name BLOB,
+    roll_no TEXT UNIQUE,
+    address BLOB,
+    email BLOB,
+    qr_code_path TEXT
+    )
     ''')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            roll_no TEXT,
-            date TEXT,
-            status TEXT
-        )
+    CREATE TABLE IF NOT EXISTS attendance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    roll_no TEXT,
+    date TEXT,
+    status TEXT
+    )
     ''')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS admin (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
+    CREATE TABLE IF NOT EXISTS admin (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT
+    )
     ''')
     conn.commit()
     conn.close()
@@ -100,7 +117,7 @@ def admin():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        
+
         conn = sqlite3.connect('sql.db')
         cursor = conn.cursor()
         cursor.execute('SELECT password FROM admin WHERE username = ?', (username,))
@@ -113,7 +130,7 @@ def admin():
             return redirect(url_for('dashboard'))
         else:
             return "Incorrect username or password", 401
-    
+
     return render_template('admin.html')
 
 @app.route('/admin_signup', methods=['GET', 'POST'])
@@ -121,7 +138,7 @@ def admin_signup():
     if request.method == 'POST':
         username = request.form['username']
         password = generate_password_hash(request.form['password'])
-        
+
         conn = sqlite3.connect('sql.db')
         cursor = conn.cursor()
         try:
@@ -133,7 +150,7 @@ def admin_signup():
         finally:
             cursor.close()
             conn.close()
-    
+
     return render_template('signup.html')
 
 def login_required(f):
@@ -152,22 +169,22 @@ def dashboard():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        role = request.form['role']
+        role = encrypt_data(request.form['role'], encryption_key)
         first_name = encrypt_data(request.form['first_name'], encryption_key)
         middle_name = encrypt_data(request.form['middle_name'], encryption_key)
         last_name = encrypt_data(request.form['last_name'], encryption_key)
-        roll_no = encrypt_data(request.form['roll_no'], encryption_key)
+        roll_no = request.form['roll_no']  # Roll number is used as a unique identifier, so it should not be encrypted
         address = encrypt_data(request.form['address'], encryption_key)
         email = encrypt_data(request.form['email'], encryption_key)
 
         details = {
-            "Role": role,
-            "First Name": first_name,
-            "Middle Name": middle_name,
-            "Last Name": last_name,
+            "Role": request.form['role'],
+            "First Name": request.form['first_name'],
+            "Middle Name": request.form['middle_name'],
+            "Last Name": request.form['last_name'],
             "Roll No.": roll_no,
-            "Address": address,
-            "Email": email
+            "Address": request.form['address'],
+            "Email": request.form['email']
         }
 
         details_json = json.dumps(details)
@@ -195,7 +212,9 @@ def register():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (role, first_name, middle_name, last_name, roll_no, address, email, qr_code_path))
             conn.commit()
+            logging.info(f"User registered successfully: {roll_no}")
         except sqlite3.IntegrityError:
+            logging.error(f"Registration failed: Roll number {roll_no} already exists.")
             return "Roll number already exists. Please use a unique roll number."
         finally:
             cursor.close()
@@ -204,55 +223,86 @@ def register():
         return render_template('qr_review.html', details=details, qr_code_url=f'qr_{roll_no}.png')
     return render_template('register.html')
 
-@app.route('/student_records')
-@login_required
-def student_records():
-    month = request.args.get('month', datetime.datetime.now().strftime('%m'))
-    year = request.args.get('year', datetime.datetime.now().strftime('%Y'))
-
+def fetch_students():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT users.roll_no, users.first_name, users.middle_name, users.last_name, users.email,
-               attendance.date, attendance.status
-        FROM users 
-        LEFT JOIN attendance ON users.roll_no = attendance.roll_no 
-        WHERE users.role = "student" AND strftime('%m', attendance.date) = ? AND strftime('%Y', attendance.date) = ?
-        ORDER BY users.roll_no, attendance.date
-    ''', (month, year))
-    rows = cursor.fetchall()
-
-    records = {}
-    for row in rows:
-        roll_no = row[0]
-        if roll_no not in records:
-            records[roll_no] = {
-                'roll_no': row[0],
-                'first_name': decrypt_data(row[1], encryption_key),
-                'middle_name': decrypt_data(row[2], encryption_key),
-                'last_name': decrypt_data(row[3], encryption_key),
-                'email': decrypt_data(row[4], encryption_key),
-                'attendance': ['N/A'] * 31
-            }
-        if row[5]:
-            day = int(row[5].split('-')[2])
-            records[roll_no]['attendance'][day-1] = row[6]
-
-    cursor.close()
+    cursor.execute("SELECT roll_no, first_name, middle_name, last_name, email FROM users")
+    students = cursor.fetchall()
     conn.close()
+    return [
+        {
+            'roll_no': student[0],
+            'first_name': decrypt_data(student[1], encryption_key),
+            'middle_name': decrypt_data(student[2], encryption_key),
+            'last_name': decrypt_data(student[3], encryption_key),
+            'email': decrypt_data(student[4], encryption_key)
+        }
+        for student in students
+    ]
 
-    return render_template('student_records.html', records=records.values(), current_year=datetime.datetime.now().year)
+def fetch_attendance(month, year):
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT roll_no, date, status FROM attendance WHERE strftime('%m', date) = ? AND strftime('%Y', date) = ?", (month, year))
+    attendance = cursor.fetchall()
+    conn.close()
+    return attendance
+
+@app.route('/student_records', methods=['GET'])
+def student_records():
+    month = request.args.get('month', '07')  # Default to current month if not provided
+    year = request.args.get('year', str(datetime.now().year))  # Default to current year if not provided
+
+    students = fetch_students()
+    attendance_data = fetch_attendance(month, year)
+
+    print("Fetched students: ", students)
+    print("Fetched attendance: ", attendance_data)
+
+    records = []
+    for student in students:
+        record = {
+            'roll_no': student['roll_no'],
+            'first_name': student['first_name'],
+            'middle_name': student['middle_name'],
+            'last_name': student['last_name'],
+            'email': student['email'],
+            'attendance': ['N/A'] * 31
+        }
+        for attendance in attendance_data:
+            roll_no, date, status = attendance
+            day = int(date.split('-')[2])
+            if roll_no == student['roll_no']:
+                record['attendance'][day-1] = 'P' if status == 'present' else 'A'
+        records.append(record)
+
+    print("Records: ", records)
+
+    return render_template('student_records.html', records=records, current_year=year, current_month=month)
 
 @app.route('/teacher_records')
 @login_required
 def teacher_records():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE role="teacher"')
+    cursor.execute('SELECT * FROM users WHERE role=?', (encrypt_data("teacher", encryption_key),))
     records = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('teacher_records.html', records=records)
+
+    decrypted_records = []
+    for record in records:
+        decrypted_record = list(record)
+        decrypted_record[1] = decrypt_data(record[1], encryption_key)  # role
+        decrypted_record[2] = decrypt_data(record[2], encryption_key)  # first_name
+        decrypted_record[3] = decrypt_data(record[3], encryption_key)  # middle_name
+        decrypted_record[4] = decrypt_data(record[4], encryption_key)  # last_name
+        decrypted_record[6] = decrypt_data(record[6], encryption_key)  # address
+        decrypted_record[7] = decrypt_data(record[7], encryption_key)  # email
+        decrypted_records.append(decrypted_record)
+
+    logging.debug(f"Teacher records: {decrypted_records}")
+    return render_template('teacher_records.html', records=decrypted_records)
 
 @app.route('/mark_attendance', methods=['POST'])
 @login_required
@@ -264,15 +314,20 @@ def mark_attendance():
 
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO attendance (roll_no, date, status)
-        VALUES (?, ?, ?)
-    """, (roll_no, date, status))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return jsonify({"message": "Attendance marked successfully"}), 200
+    try:
+        cursor.execute("""
+            INSERT INTO attendance (roll_no, date, status)
+            VALUES (?, ?, ?)
+        """, (roll_no, date, status))
+        conn.commit()
+        logging.info(f"Attendance marked successfully for {roll_no} on {date}")
+        return jsonify({"message": "Attendance marked successfully"}), 200
+    except sqlite3.IntegrityError as e:
+        logging.error(f"Error marking attendance: {e}")
+        return jsonify({"message": "Error marking attendance"}), 400
+    finally:
+        cursor.close()
+        conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
