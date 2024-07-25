@@ -16,6 +16,7 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - phase 12: Added session to get rid of vunerablities.
 - phase 13: Redesigned register.html and implemented "unique roll no."
 - phase 14: Added data encryption algorithm. 
+- phase 15: Added a way of viewing students details in students records by clicking their names
 
 **User Interface Design**
 - Home Page (ghar.html): Landing page with navigation to student, teacher, and admin sections.
