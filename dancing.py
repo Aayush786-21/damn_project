@@ -220,8 +220,71 @@ def register():
             cursor.close()
             conn.close()
 
+        # Save QR review page as a static HTML file
+        qr_review_html = render_template('qr_review.html', details=details, qr_code_url=f'qr_{roll_no}.png')
+        qr_review_path = os.path.join('static', f'qr_review_{roll_no}.html')
+        with open(qr_review_path, 'w') as f:
+            f.write(qr_review_html)
+
         return render_template('qr_review.html', details=details, qr_code_url=f'qr_{roll_no}.png')
     return render_template('register.html')
+
+@app.route('/student_records', methods=['GET'])
+def student_records():
+    month = request.args.get('month', '07')  # Default to current month if not provided
+    year = request.args.get('year', str(datetime.now().year))  # Default to current year if not provided
+    
+    students = fetch_students()
+    attendance_data = fetch_attendance(month, year)
+    
+    print("Fetched students: ", students)  # Debug: Check fetched students
+    print("Fetched attendance: ", attendance_data)  # Debug: Check fetched attendance data
+    
+    records = []
+    for student in students:
+        record = {
+            'roll_no': student['roll_no'],
+            'first_name': student['first_name'],
+            'middle_name': student['middle_name'],
+            'last_name': student['last_name'],
+            'email': student['email'],
+            'attendance': ['N/A'] * 31
+        }
+        for attendance in attendance_data:
+            roll_no, date, status = attendance
+            day = int(date.split('-')[2])
+            if roll_no == student['roll_no']:
+                record['attendance'][day-1] = 'P' if status == 'present' else 'A'
+        records.append(record)
+    
+    print("Records: ", records)  # Debug: Check processed records
+    
+    return render_template('student_records.html', records=records, current_year=year)
+
+@app.route('/teacher_records')
+@login_required
+def teacher_records():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE role=?', (encrypt_data("teacher", encryption_key),))
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    decrypted_records = []
+    for record in records:
+        decrypted_record = list(record)
+        decrypted_record[1] = decrypt_data(record[1], encryption_key)  # role
+        decrypted_record[2] = decrypt_data(record[2], encryption_key)  # first_name
+        decrypted_record[3] = decrypt_data(record[3], encryption_key)  # middle_name
+        decrypted_record[4] = decrypt_data(record[4], encryption_key)  # last_name
+        decrypted_record[6] = decrypt_data(record[6], encryption_key)  # address
+        decrypted_record[7] = decrypt_data(record[7], encryption_key)  # email
+        decrypted_records.append(decrypted_record)
+
+    logging.debug(f"Teacher records: {decrypted_records}")
+    
+    return render_template('teacher_records.html', records=decrypted_records)
 
 def fetch_students():
     conn = sqlite3.connect('sql.db')
@@ -247,63 +310,6 @@ def fetch_attendance(month, year):
     attendance = cursor.fetchall()
     conn.close()
     return attendance
-
-@app.route('/student_records', methods=['GET'])
-def student_records():
-    month = request.args.get('month', '07')  # Default to current month if not provided
-    year = request.args.get('year', str(datetime.now().year))  # Default to current year if not provided
-
-    students = fetch_students()
-    attendance_data = fetch_attendance(month, year)
-
-    print("Fetched students: ", students)
-    print("Fetched attendance: ", attendance_data)
-
-    records = []
-    for student in students:
-        record = {
-            'roll_no': student['roll_no'],
-            'first_name': student['first_name'],
-            'middle_name': student['middle_name'],
-            'last_name': student['last_name'],
-            'email': student['email'],
-            'attendance': ['N/A'] * 31
-        }
-        for attendance in attendance_data:
-            roll_no, date, status = attendance
-            day = int(date.split('-')[2])
-            if roll_no == student['roll_no']:
-                record['attendance'][day-1] = 'P' if status == 'present' else 'A'
-        records.append(record)
-
-    print("Records: ", records)
-
-    return render_template('student_records.html', records=records, current_year=year, current_month=month)
-
-@app.route('/teacher_records')
-@login_required
-def teacher_records():
-    conn = sqlite3.connect('sql.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE role=?', (encrypt_data("teacher", encryption_key),))
-    records = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    decrypted_records = []
-    for record in records:
-        decrypted_record = list(record)
-        decrypted_record[1] = decrypt_data(record[1], encryption_key)  # role
-        decrypted_record[2] = decrypt_data(record[2], encryption_key)  # first_name
-        decrypted_record[3] = decrypt_data(record[3], encryption_key)  # middle_name
-        decrypted_record[4] = decrypt_data(record[4], encryption_key)  # last_name
-        decrypted_record[6] = decrypt_data(record[6], encryption_key)  # address
-        decrypted_record[7] = decrypt_data(record[7], encryption_key)  # email
-        decrypted_records.append(decrypted_record)
-
-    logging.debug(f"Teacher records: {decrypted_records}")
-    return render_template('teacher_records.html', records=decrypted_records)
-
 @app.route('/mark_attendance', methods=['POST'])
 @login_required
 def mark_attendance():
@@ -329,5 +335,32 @@ def mark_attendance():
         cursor.close()
         conn.close()
 
+@app.route('/view_attendance', methods=['GET'])
+def view_attendance():
+    roll_no = request.args.get('roll_no')
+    month = request.args.get('month', datetime.now().strftime('%m'))
+    year = request.args.get('year', datetime.now().strftime('%Y'))
+
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT date, status FROM attendance WHERE roll_no = ? AND strftime("%m", date) = ? AND strftime("%Y", date) = ?', (roll_no, month, year))
+    attendance_records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    dates = []
+    statuses = []
+    for record in attendance_records:
+        dates.append(record[0])
+        statuses.append(record[1])
+
+    return render_template('view_attendance.html', roll_no=roll_no, dates=dates, statuses=statuses, month=month, year=year)
+
+@app.route('/logout')
+@login_required
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('admin'))
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
