@@ -1,4 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, jsonify, session
+from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler
 import qrcode
 import os
 import sqlite3
@@ -18,8 +20,64 @@ app.secret_key = 'your_secret_key_here'
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'nobusparkhere@gmail.com'
+app.config['MAIL_PASSWORD'] = '()dev0ps?786A'
+
+mail = Mail(app)
+
 # Encryption key setup
 KEY_FILE = 'secret.key'
+
+def send_email(subject, recipient, body):
+    try:
+        msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
+        msg.body = body
+        mail.send(msg)
+        logging.info(f"Email sent to {recipient}")
+    except Exception as e:
+        logging.error(f"Error sending email to {recipient}: {e}")
+
+# Function to check for consecutive absences
+def check_consecutive_absences():
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT roll_no, COUNT(*) AS absences
+        FROM attendance
+        WHERE status = 'absent'
+        GROUP BY roll_no
+        HAVING absences >= 3
+    """)
+    absentees = cursor.fetchall()
+    conn.close()
+
+    for absentee in absentees:
+        roll_no = absentee[0]
+        cursor = conn.cursor()
+        cursor.execute('SELECT email FROM users WHERE roll_no = ?', (roll_no,))
+        email = cursor.fetchone()[0]
+        cursor.close()
+        send_email(
+            subject="Attendance Alert",
+            recipient=email,
+            body=f"Dear student, you have been absent for 3 or more consecutive days. Please contact your teacher."
+        )
+
+# Schedule the absence check and notification
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_consecutive_absences, trigger="interval", hours=24)
+scheduler.start()
+
+# Shut down the scheduler when exiting the app
+@app.before_first_request
+def shutdown_scheduler():
+    atexit.register(lambda: scheduler.shutdown())
 
 def generate_key():
     return Fernet.generate_key()
@@ -364,3 +422,6 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
