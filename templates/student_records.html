@@ -38,9 +38,11 @@
         }
         .present {
             background-color: rgb(244, 250, 244);
+            color: green;
         }
         .absent {
             background-color: red;
+            color: white;
         }
         .remarks-input {
             width: 100%;
@@ -108,9 +110,9 @@
                 <td>{{ record.roll_no }}</td>
                 <td><a href="{{ url_for('static', filename='qr_review_' ~ record.roll_no ~ '.html') }}">{{ record.first_name }} {{ record.middle_name }} {{ record.last_name }}</a></td>
                 <td>{{ record.email }}</td>
-                {% for day in range(1, 32) %}
-                <td class="{% if record.attendance[day-1] == 'P' %}present{% elif record.attendance[day-1] == 'A' %}absent{% else %}N/A{% endif %}">
-                    {{ record.attendance[day-1] if record.attendance[day-1] != 'N/A' else 'N/A' }}
+                {% for attendance in record.attendance %}
+                <td class="{% if attendance.status == 'P' %}present{% elif attendance.status == 'A' %}absent{% else %}N/A{% endif %}">
+                    {{ attendance.status }}
                 </td>
                 {% endfor %}
                 <td><input type="text" class="remarks-input" placeholder="Add remarks"></td>

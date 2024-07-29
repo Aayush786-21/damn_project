@@ -69,4 +69,42 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - Feature Expansion: Potential new features and improvements.
 - Scalability: Plans for scaling the application to handle more users and data.
 
+#this is the way to test the smtp server works or not! 
+
+
+
+# import smtplib
+# from email.mime.text import MIMEText
+
+# def send_test_email():
+#     smtp_server = 'smtp.yourdomain.com'
+#     smtp_port = 587
+#     sender = 'you@yourdomain.com'
+#     recipient = 'recipient@otherdomain.com'
+#     username = 'your_username'
+#     password = 'your_password'
+
+#     # Create the email content
+#     msg = MIMEText('This is a test email.')
+#     msg['Subject'] = 'SMTP Test'
+#     msg['From'] = sender
+#     msg['To'] = recipient
+
+#     try:
+#         # Connect to the SMTP server
+#         server = smtplib.SMTP(smtp_server, smtp_port)
+#         server.starttls()  # Secure the connection
+#         server.login(username, password)  # Log in to the server
+
+#         # Send the email
+#         server.sendmail(sender, recipient, msg.as_string())
+#         server.quit()  # Terminate the session
+
+#         print("Email sent successfully")
+#     except Exception as e:
+#         print(f"Failed to send email: {e}")
+
+# # Call the function to send the test email
+# send_test_email()
+
 
