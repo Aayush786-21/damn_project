@@ -72,30 +72,35 @@
                 const data = JSON.parse(qrText);
                 const currentDate = new Date().toISOString().split('T')[0];
 
+        // Create a FormData object
+                const formData = new FormData();
+                formData.append('qr_data', qrText);
+
                 fetch('/mark_attendance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        roll_no: data['Roll No.'],
-                        date: currentDate,
-                        status: 'present'
-                    })
+                method: 'POST',
+                body: formData
                 })
                 .then(response => response.json())
                 .then(data => {
-                    alert('Attendance marked successfully for ' + data.message);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    alert('Error marking attendance: ' + error);
-                });
-            } catch (error) {
-                console.error('Error parsing QR code:', error);
-                alert('Error reading QR code: ' + error);
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else if (data.message) {
+                alert(data.message);
+                if (data.students && data.students.length > 0) {
+                    const studentNames = data.students.map(s => s.name || s.roll_no).join(', ');
+                    alert('Attendance marked for: ' + studentNames);
+                }
             }
-        }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('Error marking attendance: ' + error);
+        });
+    } catch (error) {
+        console.error('Error parsing QR code:', error);
+        alert('Error reading QR code: ' + error);
+    }
+}
     </script>
 </body>
 </html>

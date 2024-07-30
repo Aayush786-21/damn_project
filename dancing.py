@@ -320,41 +320,50 @@ def fetch_attendance(month, year):
     rows = cursor.fetchall()
     conn.close()
     return rows
-
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
-    if 'image' not in request.files:
-        return "No image provided", 400
+    logging.info("Received request to mark attendance")
+    
+    if 'qr_data' not in request.form:
+        logging.error("No QR data provided in the request")
+        return jsonify({"error": "No QR data provided"}), 400
 
-    image_file = request.files['image']
-    image = cv2.imdecode(np.frombuffer(image_file.read(), np.uint8), cv2.IMREAD_COLOR)
+    qr_data = request.form['qr_data']
+    logging.info(f"Received QR data: {qr_data}")
 
-    decoded_objects = decode(image)
-    if not decoded_objects:
-        return "No QR code found in the image", 400
+    try:
+        data = json.loads(qr_data)
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding QR data: {str(e)}")
+        return jsonify({"error": "Invalid QR data"}), 400
 
-    attendance_marked = False
+    roll_no = data.get('Roll No.')
+    if not roll_no:
+        logging.warning("Roll No. not found in QR data")
+        return jsonify({"error": "Roll No. not found in QR data"}), 400
 
-    for obj in decoded_objects:
-        data = json.loads(obj.data.decode('utf-8'))
-        roll_no = data['Roll No.']
-        date = datetime.now().strftime('%Y-%m-%d')
-        status = 'present'
+    date = datetime.now().strftime('%Y-%m-%d')
+    status = 'present'
 
+    try:
         conn = sqlite3.connect('sql.db')
         cursor = conn.cursor()
         cursor.execute('INSERT INTO attendance (roll_no, date, status) VALUES (?, ?, ?)', (roll_no, date, status))
         conn.commit()
         cursor.close()
         conn.close()
-
-        attendance_marked = True
-
-    if attendance_marked:
-        return "Attendance marked successfully", 200
-    else:
-        return "Failed to mark attendance", 400
-
+        logging.info(f"Attendance marked for roll_no: {roll_no}")
+        
+        student_name = f"{data.get('First Name', '')} {data.get('Last Name', '')}".strip()
+        return jsonify({
+            "message": "Attendance marked successfully",
+            "students": [{"roll_no": roll_no, "name": student_name}]
+        }), 200
+    except Exception as e:
+        logging.error(f"Error marking attendance: {str(e)}")
+        return jsonify({"error": "Failed to mark attendance"}), 400
+      
+    
 # Email notification function
 def send_absence_notification(email, student_name, consecutive_days):
     msg = Message("Attendance Alert", recipients=[email])
@@ -419,5 +428,3 @@ if __name__ == '__main__':
     atexit.register(lambda: scheduler.shutdown())
 
     app.run(debug=True)
-
-
