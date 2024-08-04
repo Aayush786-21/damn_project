@@ -18,6 +18,7 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - phase 14: Added data encryption algorithm. 
 - phase 15: Added a way of viewing students details in students records by clicking their names
 - phase 16: Added mailing notification system , if a student is absent for 3 consecutive days, He will get an email notification
+- phase 17: Added holidays to make students/teachers not marked as absent when its a holiday.
 
 **User Interface Design**
 - Home Page (ghar.html): Landing page with navigation to student, teacher, and admin sections.
