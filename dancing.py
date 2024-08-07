@@ -8,13 +8,13 @@ import sqlite3
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from cryptography.fernet import Fernet, InvalidToken
 import logging
-
+import calendar
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -113,6 +113,12 @@ def init_sqlite_db():
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     roll_no TEXT,
     last_notified_date TEXT
+    )
+    ''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS holidays (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    holiday_date TEXT
     )
     ''')
     conn.commit()
@@ -251,75 +257,106 @@ def register():
 
 @app.route('/student_records', methods=['GET'])
 def student_records():
-    month = request.args.get('month', '07')  # Default to current month if not provided
-    year = request.args.get('year', str(datetime.now().year))  # Default to current year if not provided
-    
-    students = fetch_students()
-    attendance_data = fetch_attendance(month, year)
-    
-    print("Fetched students: ", students)  # Debug: Check fetched students
-    print("Fetched attendance: ", attendance_data)  # Debug: Check fetched attendance data
-    
-    records = []
+    try:
+        year = request.args.get('year', datetime.now().year)
+        month = request.args.get('month', datetime.now().month)
+
+        # Ensure that year and month are valid integers
+        year = int(year)
+        month = int(month)
+        
+        # Validate month
+        if month < 1 or month > 12:
+            raise ValueError("Invalid month value")
+
+    except ValueError:
+        # If conversion fails, use current month and year
+        year = datetime.now().year
+        month = datetime.now().month
+
+    # List of holidays for the year
+    holidays = [
+        '2024-01-01', '2024-02-20', '2024-03-21', '2024-04-14',
+        '2024-05-01', '2024-06-01', '2024-07-16', '2024-08-15',
+        '2024-09-25', '2024-10-05', '2024-11-01', '2024-12-25'
+    ]
+
+    num_days = calendar.monthrange(year, month)[1]
+    days = [datetime(year, month, day).strftime('%Y-%m-%d') for day in range(1, num_days + 1)]
+
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT first_name, last_name, roll_no FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
+    students = cursor.fetchall()
+
+    attendance_records = []
     for student in students:
-        if student['role'] == 'student':  # Only process students
-            record = {
-                'first_name': student['first_name'],
-                'middle_name': student['middle_name'],
-                'last_name': student['last_name'],
-                'roll_no': student['roll_no'],
-                'address': student['address'],
-                'email': student['email'],
-                'attendance': []
-            }
-            
-            for day in range(1, 32):  # Assuming a maximum of 31 days in a month
-                date = f"{year}-{month}-{day:02d}"
-                status = 'absent'  # Default to 'absent'
-                
-                for attendance in attendance_data:
-                    if attendance[0] == student['roll_no'] and attendance[1] == date:
-                        status = attendance[2]  # Update status if attendance record found
-                
-                record['attendance'].append({
-                    'date': date,
-                    'status': status
-                })
-            records.append(record)
-    
-    print("Attendance records: ", records)  # Debug: Check compiled attendance records
-    
-    return render_template('student_records.html', records=records, current_month=month, current_year=year, class_label='BCA VI Sem')
-
-def fetch_students():
-    conn = sqlite3.connect('sql.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT role, first_name, middle_name, last_name, roll_no, address, email FROM users')
-    rows = cursor.fetchall()
-    conn.close()
-    
-    students = []
-    for row in rows:
-        student = {
-            'role': decrypt_data(row[0], encryption_key),
-            'first_name': decrypt_data(row[1], encryption_key),
-            'middle_name': decrypt_data(row[2], encryption_key),
-            'last_name': decrypt_data(row[3], encryption_key),
-            'roll_no': row[4],
-            'address': decrypt_data(row[5], encryption_key),
-            'email': decrypt_data(row[6], encryption_key)
+        student_attendance = {
+            'first_name': decrypt_data(student[0], encryption_key),
+            'last_name': decrypt_data(student[1], encryption_key),
+            'roll_no': student[2],
+            'attendance': {}
         }
-        students.append(student)
-    
-    return students
+        for day in days:
+            if day in holidays or datetime.strptime(day, '%Y-%m-%d').weekday() == 5:  # Mark Saturdays and holidays
+                student_attendance['attendance'][day] = 'Holiday'
+            else:
+                cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (student[2], day))
+                result = cursor.fetchone()
+                student_attendance['attendance'][day] = result[0] if result else 'Absent'
+        attendance_records.append(student_attendance)
 
-def fetch_attendance(month, year):
+    conn.close()
+
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    return render_template('student_records.html', attendance_records=attendance_records, current_year=current_year, current_month=current_month, selected_year=year, selected_month=month, datetime=datetime)
+
+@app.route('/teacher_records', methods=['GET'])
+def teacher_records():
+    year = request.args.get('year', datetime.now().year)
+    month = request.args.get('month', datetime.now().month)
+    
+    # List of holidays for the year
+    holidays = [
+        '2024-01-01', '2024-02-20', '2024-03-21', '2024-04-14',
+        '2024-05-01', '2024-06-01', '2024-07-16', '2024-08-15',
+        '2024-09-25', '2024-10-05', '2024-11-01', '2024-12-25'
+    ]
+
+    num_days = calendar.monthrange(int(year), int(month))[1]
+    days = [datetime(int(year), int(month), day).strftime('%Y-%m-%d') for day in range(1, num_days + 1)]
+
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT roll_no, date, status FROM attendance WHERE strftime("%m", date) = ? AND strftime("%Y", date) = ?', (month, year))
-    rows = cursor.fetchall()
+    cursor.execute('SELECT first_name, last_name, roll_no FROM users WHERE role = ?', (encrypt_data('teacher', encryption_key),))
+    teachers = cursor.fetchall()
+
+    attendance_records = []
+    for teacher in teachers:
+        teacher_attendance = {
+            'first_name': decrypt_data(teacher[0], encryption_key),
+            'last_name': decrypt_data(teacher[1], encryption_key),
+            'roll_no': teacher[2],
+            'attendance': {}
+        }
+        for day in days:
+            if day in holidays or datetime.strptime(day, '%Y-%m-%d').weekday() == 5:  # Mark Saturdays and holidays
+                teacher_attendance['attendance'][day] = 'Holiday'
+            else:
+                cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (teacher[2], day))
+                result = cursor.fetchone()
+                teacher_attendance['attendance'][day] = result[0] if result else 'Absent'
+        attendance_records.append(teacher_attendance)
+
     conn.close()
-    return rows
+
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    return render_template('teacher_records.html', attendance_records=attendance_records, current_year=current_year, current_month=current_month)
+
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
     logging.info("Received request to mark attendance")
@@ -362,69 +399,88 @@ def mark_attendance():
     except Exception as e:
         logging.error(f"Error marking attendance: {str(e)}")
         return jsonify({"error": "Failed to mark attendance"}), 400
-      
     
-# Email notification function
-def send_absence_notification(email, student_name, consecutive_days):
-    msg = Message("Attendance Alert", recipients=[email])
-    msg.body = f"Dear {student_name},\n\nYou have been absent for {consecutive_days} consecutive days. Please make sure to attend classes regularly.\n\nBest regards,\nSchool Administration"
-    try:
-        mail.send(msg)
-        logging.info(f"Notification sent to {email} for {student_name}")
-    except Exception as e:
-        logging.error(f"Failed to send notification to {email}: {e}")
+def capture_qr():
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-# Check for consecutive absences
+        for barcode in decode(frame):
+            qr_data = barcode.data.decode('utf-8')
+            data = json.loads(qr_data)
+
+            mark_attendance(data['Roll No.'], 'Present')
+
+            pts = np.array([barcode.polygon], np.int32)
+            pts = pts.reshape((-1, 1, 2))
+            cv2.polylines(frame, [pts], True, (0, 255, 0), 3)
+            cv2.putText(frame, 'Attendance Marked', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            break
+
+        cv2.imshow('QR Code Scanner', frame)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+def send_email_notification(roll_no):
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT email FROM users WHERE roll_no = ?', (roll_no,))
+    result = cursor.fetchone()
+    if result:
+        email = decrypt_data(result[0], encryption_key)
+        msg = Message('Attendance Alert', sender='nobusparkhere@gmail.com', recipients=[email])
+        msg.body = f'Dear Student, you have been absent for three consecutive days. Please ensure to attend classes regularly.'
+        try:
+            mail.send(msg)
+            logging.info(f"Notification sent to {email}")
+        except Exception as e:
+            logging.error(f"Failed to send email notification: {e}")
+    cursor.close()
+    conn.close()
+
 def check_consecutive_absences():
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
+    cursor.execute('SELECT roll_no FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
+    students = cursor.fetchall()
 
-    cursor.execute('''
-        SELECT u.roll_no, u.first_name, u.email, GROUP_CONCAT(a.date, ',') as absences
-        FROM users u
-        JOIN attendance a ON u.roll_no = a.roll_no
-        WHERE a.status = 'absent'
-        GROUP BY u.roll_no
-    ''')
-    rows = cursor.fetchall()
-    
-    for row in rows:
-        roll_no, first_name, email, absences = row
-        absence_dates = absences.split(',')
+    for student in students:
+        roll_no = student[0]
+        cursor.execute('''
+            SELECT date, status FROM attendance
+            WHERE roll_no = ? AND status = 'Absent'
+            ORDER BY date DESC
+            LIMIT 3
+        ''', (roll_no,))
+        absences = cursor.fetchall()
 
-        # Check for 3 consecutive absent days
-        consecutive_days = 0
-        last_date = None
-        for date in sorted(absence_dates):
-            date_obj = datetime.strptime(date, '%Y-%m-%d')
-            if last_date and (date_obj - last_date).days == 1:
-                consecutive_days += 1
-            else:
-                consecutive_days = 1
-            if consecutive_days >= 3:
-                # Send notification if not already sent
+        if len(absences) == 3:
+            last_three_dates = [datetime.strptime(record[0], '%Y-%m-%d') for record in absences]
+            if (last_three_dates[0] - last_three_dates[2]).days == 2:
                 cursor.execute('SELECT last_notified_date FROM notifications WHERE roll_no = ?', (roll_no,))
-                notification_row = cursor.fetchone()
-                if not notification_row or datetime.strptime(notification_row[0], '%Y-%m-%d') < date_obj - timedelta(days=3):
-                    send_absence_notification(decrypt_data(email, encryption_key), decrypt_data(first_name, encryption_key), consecutive_days)
-                    if notification_row:
-                        cursor.execute('UPDATE notifications SET last_notified_date = ? WHERE roll_no = ?', (date_obj.strftime('%Y-%m-%d'), roll_no))
-                    else:
-                        cursor.execute('INSERT INTO notifications (roll_no, last_notified_date) VALUES (?, ?)', (roll_no, date_obj.strftime('%Y-%m-%d')))
-                    conn.commit()
-                break
-            last_date = date_obj
+                notification = cursor.fetchone()
+                if notification:
+                    last_notified_date = datetime.strptime(notification[0], '%Y-%m-%d')
+                    if (datetime.now() - last_notified_date).days >= 7:
+                        send_email_notification(roll_no)
+                        cursor.execute('UPDATE notifications SET last_notified_date = ? WHERE roll_no = ?', (datetime.now().strftime('%Y-%m-%d'), roll_no))
+                else:
+                    send_email_notification(roll_no)
+                    cursor.execute('INSERT INTO notifications (roll_no, last_notified_date) VALUES (?, ?)', (roll_no, datetime.now().strftime('%Y-%m-%d')))
+                conn.commit()
 
     cursor.close()
     conn.close()
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_consecutive_absences, trigger="interval", days=1)
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
+
 if __name__ == '__main__':
-    # Set up APScheduler
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_consecutive_absences, trigger="interval", days=1)
-    scheduler.start()
-
-    # Register the shutdown function to ensure scheduler is stopped gracefully
-    atexit.register(lambda: scheduler.shutdown())
-
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
