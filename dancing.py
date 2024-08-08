@@ -258,23 +258,12 @@ def register():
 @app.route('/student_records', methods=['GET'])
 def student_records():
     try:
-        year = request.args.get('year', datetime.now().year)
-        month = request.args.get('month', datetime.now().month)
-
-        # Ensure that year and month are valid integers
-        year = int(year)
-        month = int(month)
-        
-        # Validate month
-        if month < 1 or month > 12:
-            raise ValueError("Invalid month value")
-
+        year = int(request.args.get('year', datetime.now().year))
+        month = int(request.args.get('month', datetime.now().month))
     except ValueError:
-        # If conversion fails, use current month and year
         year = datetime.now().year
         month = datetime.now().month
 
-    # List of holidays for the year
     holidays = [
         '2024-01-01', '2024-02-20', '2024-03-21', '2024-04-14',
         '2024-05-01', '2024-06-01', '2024-07-16', '2024-08-15',
@@ -282,36 +271,41 @@ def student_records():
     ]
 
     num_days = calendar.monthrange(year, month)[1]
-    days = [datetime(year, month, day).strftime('%Y-%m-%d') for day in range(1, num_days + 1)]
+    days = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
 
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT first_name, last_name, roll_no FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
-    students = cursor.fetchall()
+    # cursor.execute('SELECT first_name, last_name, roll_no, email FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
+    cursor.execute('SELECT first_name , last_name, roll_no,email FROM users')
+    students_data = cursor.fetchall()
 
-    attendance_records = []
-    for student in students:
-        student_attendance = {
-            'first_name': decrypt_data(student[0], encryption_key),
-            'last_name': decrypt_data(student[1], encryption_key),
-            'roll_no': student[2],
+    students = {}
+    for student in students_data:
+        roll_no = student[2]
+        students[roll_no] = {
+            'name': f"{decrypt_data(student[0], encryption_key)} {decrypt_data(student[1], encryption_key)}",
+            'email': decrypt_data(student[3], encryption_key),
             'attendance': {}
         }
         for day in days:
             if day in holidays or datetime.strptime(day, '%Y-%m-%d').weekday() == 5:  # Mark Saturdays and holidays
-                student_attendance['attendance'][day] = 'Holiday'
+                students[roll_no]['attendance'][day] = 'Holiday'
             else:
-                cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (student[2], day))
+                cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (roll_no, day))
                 result = cursor.fetchone()
-                student_attendance['attendance'][day] = result[0] if result else 'Absent'
-        attendance_records.append(student_attendance)
+                students[roll_no]['attendance'][day] = result[0] if result else 'Absent'
 
     conn.close()
 
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+    month_name = datetime(year, month, 1).strftime('%B')
 
-    return render_template('student_records.html', attendance_records=attendance_records, current_year=current_year, current_month=current_month, selected_year=year, selected_month=month, datetime=datetime)
+    return render_template('student_records.html', 
+                           students=students, 
+                           days=days, 
+                           selected_year=year, 
+                           selected_month=month,
+                           month_name=month_name,
+                           holidays=holidays)
 
 @app.route('/teacher_records', methods=['GET'])
 def teacher_records():
@@ -370,6 +364,7 @@ def mark_attendance():
 
     try:
         data = json.loads(qr_data)
+
     except json.JSONDecodeError as e:
         logging.error(f"Error decoding QR data: {str(e)}")
         return jsonify({"error": "Invalid QR data"}), 400
@@ -448,6 +443,7 @@ def check_consecutive_absences():
     cursor = conn.cursor()
     cursor.execute('SELECT roll_no FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
     students = cursor.fetchall()
+
 
     for student in students:
         roll_no = student[0]
