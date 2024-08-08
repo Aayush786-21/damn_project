@@ -29,7 +29,6 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - QR Review Page: Displays generated QR code and user details.
 - Student Records Page: Displays attendance records for students.
 - Teacher Records Page: Displays records for teachers.
-- Flowcharts: Include flowcharts to depict the user journey and interactions within the application.
 
 **Component Design**
 - dancing.py: Main application file handling routes and logic.
@@ -37,7 +36,6 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 - Database: SQLite database for storing user and attendance data.
 - Camera Integration: Using cv2  for QR code scanning.
 - QR Code Generation: Using qrcode  library to generate QR codes.
-- Interaction Between Components: Describe how different components interact with each other to achieve the desired functionality.
 
 **Data Design**
 - User Table: Stores user information including role, name, roll number, address, email, and QR code path.
@@ -70,43 +68,3 @@ In today's fast-paced world, efficient and accurate attendance tracking is cruci
 **Future Enhancements and Scalability**
 - Feature Expansion: Potential new features and improvements.
 - Scalability: Plans for scaling the application to handle more users and data.
-
-#this is the way to test the smtp server works or not! 
-
-
-
-# import smtplib
-# from email.mime.text import MIMEText
-
-# def send_test_email():
-#     smtp_server = 'smtp.yourdomain.com'
-#     smtp_port = 587
-#     sender = 'you@yourdomain.com'
-#     recipient = 'recipient@otherdomain.com'
-#     username = 'your_username'
-#     password = 'your_password'
-
-#     # Create the email content
-#     msg = MIMEText('This is a test email.')
-#     msg['Subject'] = 'SMTP Test'
-#     msg['From'] = sender
-#     msg['To'] = recipient
-
-#     try:
-#         # Connect to the SMTP server
-#         server = smtplib.SMTP(smtp_server, smtp_port)
-#         server.starttls()  # Secure the connection
-#         server.login(username, password)  # Log in to the server
-
-#         # Send the email
-#         server.sendmail(sender, recipient, msg.as_string())
-#         server.quit()  # Terminate the session
-
-#         print("Email sent successfully")
-#     except Exception as e:
-#         print(f"Failed to send email: {e}")
-
-# # Call the function to send the test email
-# send_test_email()
-
-
