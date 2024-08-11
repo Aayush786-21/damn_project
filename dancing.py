@@ -272,11 +272,11 @@ def student_records():
 
     num_days = calendar.monthrange(year, month)[1]
     days = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
+    today = datetime.now().strftime("%Y-%m-%d")
 
     conn = sqlite3.connect('sql.db')
     cursor = conn.cursor()
-    # cursor.execute('SELECT first_name, last_name, roll_no, email FROM users WHERE role = ?', (encrypt_data('student', encryption_key),))
-    cursor.execute('SELECT first_name , last_name, roll_no,email FROM users')
+    cursor.execute('SELECT first_name, last_name, roll_no, email FROM users')
     students_data = cursor.fetchall()
 
     students = {}
@@ -290,6 +290,8 @@ def student_records():
         for day in days:
             if day in holidays or datetime.strptime(day, '%Y-%m-%d').weekday() == 5:  # Mark Saturdays and holidays
                 students[roll_no]['attendance'][day] = 'Holiday'
+            elif day > today:
+                students[roll_no]['attendance'][day] = 'Upcoming'
             else:
                 cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (roll_no, day))
                 result = cursor.fetchone()

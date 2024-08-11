@@ -42,6 +42,10 @@
             background-color: #f0e68c; /* Light yellow */
             color: #d2691e; /* Chocolate color */
         }
+        table.table td.upcoming {
+            background-color: #d3d3d3; /* Light grey */
+            color: #808080; /* Grey */
+        }
         .remarks-input {
             width: 100%;
         }
@@ -97,7 +101,7 @@
                 </td>
                 <td>{{ student.email }}</td>
                 {% for day in days %}
-                <td class="{% if student.attendance[day] == 'Present' %}attendance-present{% elif student.attendance[day] == 'Absent' %}attendance-absent{% elif day in holidays %}holiday{% endif %}">
+                <td class="{% if student.attendance[day] == 'Present' %}attendance-present{% elif student.attendance[day] == 'Absent' %}attendance-absent{% elif student.attendance[day] == 'Holiday' %}holiday{% elif student.attendance[day] == 'Upcoming' %}upcoming{% endif %}">
                     {{ student.attendance[day] }}
                 </td>
                 {% endfor %}
