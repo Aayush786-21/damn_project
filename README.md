@@ -7,15 +7,22 @@ QR Dance is a Python Flask-based application designed to manage student attendan
 - Register students and teachers
 - Capture attendance via QR codes
 - View attendance records by month and year
+- Handle holidays and weekends in attendance records
+- Send automated email notifications for consecutive absences
+- Encrypt sensitive user data
 - User-friendly interface with Bootstrap styling
 
 ## Prerequisites
 
 - Python 3.x
 - Flask
+- Flask-Mail
 - OpenCV
 - SQLite3
+- Pyzbar
+- Cryptography
 - Bootstrap
+- APScheduler
 
 ## Installation
 
@@ -54,26 +61,33 @@ QR Dance is a Python Flask-based application designed to manage student attendan
 
 ## Project Structure
 
-- `app.py`: Main application file
+- `dancing.py`: Main application file with Flask routes, email notifications, and encryption
 - `templates/`: HTML templates
-  - `index.html`: Home page
+  - `ghar.html`: Home page
   - `register.html`: Registration page for students and teachers
   - `student_records.html`: Page to view student attendance records
-  - `admin.html`: Admin panel (to be customized as per requirements)
-- `static/`: Static files (CSS, JavaScript)
+  - `teacher_records.html`: Page to view teacher attendance records
+  - `login.html`: Dashboard for admin
+  - `signup.html`: Admin signup page
+  - `qr_review.html`: Page to display QR code and user details
+- `static/`: Static files (CSS, JavaScript, QR code images)
 - `setup_database.py`: Script to set up the SQLite database
+- `secret.key`: File storing the encryption key (automatically generated if not found)
 
 ## Screenshots
 
 ### Home Page
 ![Home Page]
 ![alt text](<Screenshot from 2024-07-17 13-49-10.png>)
+
 ### Register Page
 ![Register Page]
 ![alt text](<Screenshot from 2024-07-17 13-51-22.png>)
+
 ### Student Records Page
 ![Student Records Page]
 ![alt text](<Screenshot from 2024-07-17 13-52-16.png>)
+
 ## Contributing
 
 Feel free to submit issues and pull requests. For major changes, please open an issue first to discuss what you would like to change.
@@ -81,5 +95,3 @@ Feel free to submit issues and pull requests. For major changes, please open an 
 ## License
 
 This project is licensed under the MIT License.
-
-
