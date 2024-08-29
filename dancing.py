@@ -15,6 +15,7 @@ from functools import wraps
 from cryptography.fernet import Fernet, InvalidToken
 import logging
 import calendar
+from mistralai import Mistral
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -83,7 +84,6 @@ def init_sqlite_db():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    role BLOB,
     first_name BLOB,
     middle_name BLOB,
     last_name BLOB,
@@ -133,10 +133,6 @@ def home():
 @app.route('/student')
 def student():
     return render_template('student.html')
-
-@app.route('/teacher')
-def teacher():
-    return render_template('teacher.html')
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -195,7 +191,6 @@ def dashboard():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        role = encrypt_data(request.form['role'], encryption_key)
         first_name = encrypt_data(request.form['first_name'], encryption_key)
         middle_name = encrypt_data(request.form['middle_name'], encryption_key)
         last_name = encrypt_data(request.form['last_name'], encryption_key)
@@ -204,7 +199,6 @@ def register():
         email = encrypt_data(request.form['email'], encryption_key)
 
         details = {
-            "Role": request.form['role'],
             "First Name": request.form['first_name'],
             "Middle Name": request.form['middle_name'],
             "Last Name": request.form['last_name'],
@@ -234,9 +228,9 @@ def register():
             conn = sqlite3.connect('sql.db')
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO users (role, first_name, middle_name, last_name, roll_no, address, email, qr_code_path)
+                INSERT INTO users (first_name, middle_name, last_name, roll_no, address, email, qr_code_path)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (role, first_name, middle_name, last_name, roll_no, address, email, qr_code_path))
+            """, (first_name, middle_name, last_name, roll_no, address, email, qr_code_path))
             conn.commit()
             logging.info(f"User registered successfully: {roll_no}")
         except sqlite3.IntegrityError:
@@ -308,50 +302,6 @@ def student_records():
                            selected_month=month,
                            month_name=month_name,
                            holidays=holidays)
-
-@app.route('/teacher_records', methods=['GET'])
-def teacher_records():
-    year = request.args.get('year', datetime.now().year)
-    month = request.args.get('month', datetime.now().month)
-    
-    # List of holidays for the year
-    holidays = [
-        '2024-01-01', '2024-02-20', '2024-03-21', '2024-04-14',
-        '2024-05-01', '2024-06-01', '2024-07-16', '2024-08-15',
-        '2024-09-25', '2024-10-05', '2024-11-01', '2024-12-25'
-    ]
-
-    num_days = calendar.monthrange(int(year), int(month))[1]
-    days = [datetime(int(year), int(month), day).strftime('%Y-%m-%d') for day in range(1, num_days + 1)]
-
-    conn = sqlite3.connect('sql.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT first_name, last_name, roll_no FROM users WHERE role = ?', (encrypt_data('teacher', encryption_key),))
-    teachers = cursor.fetchall()
-
-    attendance_records = []
-    for teacher in teachers:
-        teacher_attendance = {
-            'first_name': decrypt_data(teacher[0], encryption_key),
-            'last_name': decrypt_data(teacher[1], encryption_key),
-            'roll_no': teacher[2],
-            'attendance': {}
-        }
-        for day in days:
-            if day in holidays or datetime.strptime(day, '%Y-%m-%d').weekday() == 5:  # Mark Saturdays and holidays
-                teacher_attendance['attendance'][day] = 'Holiday'
-            else:
-                cursor.execute('SELECT status FROM attendance WHERE roll_no = ? AND date = ?', (teacher[2], day))
-                result = cursor.fetchone()
-                teacher_attendance['attendance'][day] = result[0] if result else 'Absent'
-        attendance_records.append(teacher_attendance)
-
-    conn.close()
-
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-
-    return render_template('teacher_records.html', attendance_records=attendance_records, current_year=current_year, current_month=current_month)
 
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
