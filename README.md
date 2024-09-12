@@ -1,6 +1,6 @@
 # QR Dance
 
-QR Dance is a Python Flask-based application designed to manage student attendance using QR codes. This project allows administrators to register students and teachers, capture attendance via QR codes, and view attendance records. 
+QR Dance is a Python Flask-based application designed to manage student attendance using QR codes. This project allows administrators to register students, capture attendance via QR codes, and view attendance records. 
 
 ## Features
 
@@ -81,7 +81,7 @@ QR Dance is a Python Flask-based application designed to manage student attendan
 
 ### Register Page
 ![Register Page]
-![alt text](<Screenshot from 2024-09-12 12-33-30.png>)
+![alt text](<Screenshot from 2024-09-12 12-38-56.png>)
 
 ### Student Records Page
 ![Student Records Page]
@@ -90,7 +90,3 @@ QR Dance is a Python Flask-based application designed to manage student attendan
 ## Contributing
 
 Feel free to submit issues and pull requests. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-This project is licensed under the MIT License.
