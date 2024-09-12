@@ -78,11 +78,11 @@ QR Dance is a Python Flask-based application designed to manage student attendan
 
 ### Home Page
 ![Home Page]
-![alt text](<Screenshot from 2024-07-17 13-49-10.png>)
+![alt text](<Screenshot from 2024-09-12 12-43-19.png>)
 
 ### Register Page
 ![Register Page]
-![alt text](<Screenshot from 2024-08-11 14-27-19.png>)
+![alt text](<Screenshot from 2024-09-12 12-38-56.png>)
 
 ### Student Records Page
 ![Student Records Page]
