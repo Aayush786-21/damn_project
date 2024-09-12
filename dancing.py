@@ -8,14 +8,13 @@ import sqlite3
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
-from datetime import datetime, timedelta, date
+from datetime import datetime
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from cryptography.fernet import Fernet, InvalidToken
 import logging
 import calendar
-from mistralai import Mistral
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -302,6 +301,26 @@ def student_records():
                            selected_month=month,
                            month_name=month_name,
                            holidays=holidays)
+
+@app.route('/delete_student', methods=['POST'])
+def delete_student():
+    """
+    Deletes a student from the database.
+
+    :return: A JSON response indicating whether the deletion was successful.
+    """
+    roll_no = request.form.get('roll_no')
+    if not roll_no:
+        return jsonify({'error': 'Roll number is required'}), 400
+
+    conn = sqlite3.connect('sql.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM users WHERE roll_no = ?', (roll_no,))
+    cursor.execute('DELETE FROM attendance WHERE roll_no = ?', (roll_no,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'Student deleted successfully'}), 200
 
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
