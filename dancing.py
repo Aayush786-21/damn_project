@@ -228,7 +228,7 @@ def register():
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO users (first_name, middle_name, last_name, roll_no, address, email, qr_code_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (first_name, middle_name, last_name, roll_no, address, email, qr_code_path))
             conn.commit()
             logging.info(f"User registered successfully: {roll_no}")
@@ -321,6 +321,7 @@ def delete_student():
     conn.close()
 
     return jsonify({'message': 'Student deleted successfully'}), 200
+
 
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
