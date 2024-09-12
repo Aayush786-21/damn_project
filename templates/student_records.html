@@ -62,6 +62,10 @@
         <div class="class-label">BCA VI Sem</div>
     </div>
 
+    <!-- Update and Save buttons -->
+    <button id="updateButton" class="btn btn-warning">Update</button>
+    <button id="saveButton" class="btn btn-success d-none">Save</button>
+
     <!-- Form for viewing records -->
     <form id="monthYearForm" method="GET" action="/student_records">
         <label for="month">Month:</label>
@@ -99,16 +103,20 @@
                 {% endfor %}
             </tr>
         </thead>
-        <tbody>
+        <tbody id="studentTableBody">
             {% for roll_no, student in students.items() %}
             <tr>
                 <td>{{ roll_no }}</td>
                 <td>
-                    <a href="{{ url_for('static', filename='qr_review_' ~ roll_no ~ '.html') }}">
+                    <span class="student-name" data-roll-no="{{ roll_no }}" contenteditable="false">
                         {{ student.name }}
-                    </a>
+                    </span>
                 </td>
-                <td>{{ student.email }}</td>
+                <td>
+                    <span class="student-email" data-roll-no="{{ roll_no }}" contenteditable="false">
+                        {{ student.email }}
+                    </span>
+                </td>
                 {% for day in days %}
                 <td class="{% if student.attendance[day] == 'Present' %}attendance-present{% elif student.attendance[day] == 'Absent' %}attendance-absent{% elif student.attendance[day] == 'Holiday' %}holiday{% elif student.attendance[day] == 'Upcoming' %}upcoming{% endif %}">
                     {{ student.attendance[day] }}
@@ -123,40 +131,66 @@
     {% endif %}
 
     <script>
-        // Validate month and year selection
-        document.getElementById('monthYearForm').addEventListener('submit', function(event) {
-            var month = document.getElementById('month').value;
-            var year = document.getElementById('year').value;
-            if (!month || !year) {
-                event.preventDefault();
-                alert("Please select both month and year.");
+        const updateButton = document.getElementById('updateButton');
+        const saveButton = document.getElementById('saveButton');
+        const studentNames = document.querySelectorAll('.student-name');
+        const studentEmails = document.querySelectorAll('.student-email');
+        let isEditing = false;
+
+        // Toggle editable fields
+        updateButton.addEventListener('click', function() {
+            isEditing = !isEditing;
+
+            studentNames.forEach(function(name) {
+                name.contentEditable = isEditing;
+            });
+
+            studentEmails.forEach(function(email) {
+                email.contentEditable = isEditing;
+            });
+
+            if (isEditing) {
+                saveButton.classList.remove('d-none'); // Show save button
+                updateButton.innerText = 'Cancel'; // Change Update button text to Cancel
+            } else {
+                saveButton.classList.add('d-none'); // Hide save button
+                updateButton.innerText = 'Update'; // Change Cancel back to Update
             }
         });
 
-        // Handle the delete student form submission
-        document.getElementById('deleteStudentForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            var rollNo = document.getElementById('roll_no').value;
+        // Save button logic
+        saveButton.addEventListener('click', function() {
+            const updatedStudents = [];
 
-            if (!rollNo) {
-                alert("Please enter a Roll Number.");
-                return;
-            }
+            studentNames.forEach(function(name) {
+                const rollNo = name.dataset.rollNo;
+                const updatedName = name.innerText;
 
-            fetch('/delete_student', {
+                const emailField = document.querySelector(`.student-email[data-roll-no="${rollNo}"]`);
+                const updatedEmail = emailField.innerText;
+
+                updatedStudents.push({
+                    roll_no: rollNo,
+                    name: updatedName,
+                    email: updatedEmail,
+                });
+            });
+
+            // Send the updated student data to the server using fetch
+            fetch('/update_students', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: new URLSearchParams({ 'roll_no': rollNo }),
+                body: JSON.stringify({ students: updatedStudents }),
             })
             .then(response => response.json())
             .then(data => {
-                if (data.error) {
-                    alert("Error: " + data.error);
+                if (data.success) {
+                    alert('Students updated successfully!');
+                    location.reload();  // Reload the page after update
                 } else {
-                    alert("Success: " + data.message);
-                    location.reload();  // Reload the page to refresh the table
+                    alert('Error: ' + data.error);
                 }
             })
             .catch(error => {

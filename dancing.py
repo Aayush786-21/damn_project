@@ -301,6 +301,43 @@ def student_records():
                            selected_month=month,
                            month_name=month_name,
                            holidays=holidays)
+    
+@app.route('/update_students', methods=['POST'])
+def update_students():
+    updated_students = request.json.get('students', [])
+    
+    if not updated_students:
+        return jsonify({'error': 'No student data provided.'}), 400
+    
+    try:
+        conn = sqlite3.connect('sql.db')
+        cursor = conn.cursor()
+
+        for student in updated_students:
+            roll_no = student['roll_no']
+            updated_name = student['name'].split() 
+            updated_first_name = encrypt_data(updated_name[0], encryption_key)
+            updated_last_name = encrypt_data(updated_name[-1], encryption_key)
+            updated_email = encrypt_data(student['email'], encryption_key)
+
+            # Update the database with new name and email
+            cursor.execute("""
+                UPDATE users 
+                SET first_name = ?, last_name = ?, email = ? 
+                WHERE roll_no = ?
+            """, (updated_first_name, updated_last_name, updated_email, roll_no))
+
+        conn.commit()
+
+    except sqlite3.Error as e:
+        logging.error(f"Database error occurred: {e}")
+        return jsonify({'error': 'Database error occurred while updating students.'}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify({'success': 'Student details updated successfully!'})
 
 @app.route('/delete_student', methods=['POST'])
 def delete_student():
