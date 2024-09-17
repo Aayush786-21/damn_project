@@ -7,52 +7,140 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: rgb(252, 252, 253);
-            color: rgb(12, 12, 12);
+            background-color: #fafafa; /* Very light grey background */
+            font-family: 'Open Sans', sans-serif; /* Modern font */
+            color: #333; /* Dark grey text for contrast */
+        }
+
+        .top-section {
+            background-color: #7d3c98; /* Viber purple background */
+            padding: 20px;
+            color: #fff; /* White text */
             text-align: center;
         }
-        table {
-            width: 100%;
-            margin: auto;
-            background-color: rgb(169, 134, 235) !important;
-            color: rgb(246, 243, 250) !important;
-            border-collapse: collapse;
-        }
-        table.table th, 
-        table.table td {
-            border: 1px solid white !important;
-            padding: 12px !important;
-            text-align: center !important;
-        }
-        table.table th {
-            background-color: #6f42c1 !important;
-            color: white !important;
-        }
+
         .class-label {
-            font-size: 1.2em;
+            font-size: 1.8em;
             font-weight: bold;
         }
-        table.table td.attendance-present {
-            color: green !important;
-        }
-        table.table td.attendance-absent {
-            color: red !important;
-        }
-        table.table td.holiday {
-            background-color: #f0e68c; /* Light yellow */
-            color: #d2691e; /* Chocolate color */
-        }
-        table.table td.upcoming {
-            background-color: #d3d3d3; /* Light grey */
-            color: #808080; /* Grey */
-        }
-        .remarks-input {
+
+        table {
             width: 100%;
+            margin: 30px auto;
+            background-color: #fff;
+            border-collapse: collapse;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px; /* Rounded table edges */
+            overflow: hidden;
         }
+
+        table th, 
+        table td {
+            border: none;
+            padding: 12px 15px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #6f42c1; /* Dark purple background for headers */
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        table td {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .attendance-present {
+            color: #34c759; /* Viber green */
+        }
+
+        .attendance-absent {
+            color: #e74c3c; /* Red */
+        }
+
+        .holiday {
+            background-color: #f0e68c; /* Light yellow */
+            color: #d2691e; /* Chocolate */
+        }
+
+        .upcoming {
+            background-color: #d3d3d3; /* Light grey */
+            color: #808080; /* Dark grey */
+        }
+
         .no-records {
             margin: 20px;
-            color: #333 !important;
+            color: #333;
             font-size: 1.5em;
+            text-align: center;
+        }
+
+        /* Form actions and button group styles */
+        .form-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Space between buttons */
+            margin-bottom: 20px;
+        }
+
+        .button-group button {
+            display: inline-block; 
+            padding: 10px 30px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            text-transform: uppercase;
+            margin-right: 10px; /* Add some spacing between the buttons */
+        }
+        
+
+        .btn-warning {
+            background-color: #9b59b6; /* Lighter purple for "Update" */
+            border-color: #8e44ad;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #34c759; /* Viber green */
+            border-color: #34c759;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c; /* Red */
+            border-color: #e74c3c;
+            color: white;
+        }
+
+        .form-control {
+            display: inline-block;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        .remarks-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            table th, table td {
+                font-size: 0.9em;
+            }
         }
     </style>
 </head>
@@ -62,37 +150,42 @@
         <div class="class-label">BCA VI Sem</div>
     </div>
 
-    <!-- Update and Save buttons -->
-    <button id="updateButton" class="btn btn-warning">Update</button>
-    <button id="saveButton" class="btn btn-success d-none">Save</button>
+    <!-- Button group -->
+    <div class="button-group">
+        <button id="saveButton" class="btn btn-success d-none">Save</button>
+    </div>
 
-    <!-- Form for viewing records -->
-    <form id="monthYearForm" method="GET" action="/student_records">
-        <label for="month">Month:</label>
-        <select id="month" name="month" class="form-control d-inline w-auto">
-            {% for m in range(1, 13) %}
-                <option value="{{ '{:02d}'.format(m) }}" {% if m == selected_month %}selected{% endif %}>
-                    {{ ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m-1] }}
-                </option>
-            {% endfor %}
-        </select>
+    <!-- Form actions -->
+    <div class="form-actions">
+        <!-- Form for viewing records -->
+        <form id="monthYearForm" method="GET" action="/student_records">
+            <label for="month">Month:</label>
+            <select id="month" name="month" class="form-control">
+                {% for m in range(1, 13) %}
+                    <option value="{{ '{:02d}'.format(m) }}" {% if m == selected_month %}selected{% endif %}>
+                        {{ ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m-1] }}
+                    </option>
+                {% endfor %}
+            </select>
 
-        <label for="year">Year:</label>
-        <input type="number" id="year" name="year" value="{{ selected_year }}" class="form-control d-inline w-auto" required>
+            <label for="year">Year:</label>
+            <input type="number" id="year" name="year" value="{{ selected_year }}" class="form-control" required>
 
-        <button type="submit" class="btn btn-primary">View Records</button>
-    </form>
+            <button type="submit" class="btn btn-primary mt-2">View Records</button>
+        </form>
 
-    <!-- Form for deleting student -->
-    <form id="deleteStudentForm" method="POST" class="mt-2">
-        <label for="roll_no">Roll No:</label>
-        <input type="text" id="roll_no" name="roll_no" class="form-control d-inline w-auto" placeholder="Enter Roll No." required>
+        <!-- Form for deleting student -->
+        <form id="deleteStudentForm" method="POST">
+            <label for="roll_no">Roll No:</label>
+            <input type="text" id="roll_no" name="roll_no" class="form-control d-inline w-auto" placeholder="Enter Roll No." required>
+            <button type="submit" class="btn btn-danger mt-2">Delete Student</button>
+            <button id="updateButton" class="btn btn-warning">Update</button>
 
-        <button type="submit" class="btn btn-danger">Delete Student</button>
-    </form>
+        </form>
+    </div>
 
     {% if students %}
-    <table class="table table-striped table-dark mt-4">
+    <table class="table table-striped table-hover mt-4">
         <thead>
             <tr>
                 <th>Roll No.</th>
@@ -133,6 +226,8 @@
     <script>
         const updateButton = document.getElementById('updateButton');
         const saveButton = document.getElementById('saveButton');
+        const deleteButton = document.getElementById('deleteButton');
+        const deleteForm = document.getElementById('deleteStudentForm');
         const studentNames = document.querySelectorAll('.student-name');
         const studentEmails = document.querySelectorAll('.student-email');
         let isEditing = false;
@@ -160,42 +255,42 @@
 
         // Save button logic
         saveButton.addEventListener('click', function() {
-            const updatedStudents = [];
+            const updatedStudentNames = {};
+            const updatedStudentEmails = {};
 
             studentNames.forEach(function(name) {
-                const rollNo = name.dataset.rollNo;
-                const updatedName = name.innerText;
-
-                const emailField = document.querySelector(`.student-email[data-roll-no="${rollNo}"]`);
-                const updatedEmail = emailField.innerText;
-
-                updatedStudents.push({
-                    roll_no: rollNo,
-                    name: updatedName,
-                    email: updatedEmail,
-                });
+                updatedStudentNames[name.dataset.rollNo] = name.innerText;
             });
 
-            // Send the updated student data to the server using fetch
-            fetch('/update_students', {
+            studentEmails.forEach(function(email) {
+                updatedStudentEmails[email.dataset.rollNo] = email.innerText;
+            });
+
+            fetch('/update_student_records', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ students: updatedStudents }),
+                body: JSON.stringify({
+                    updatedStudentNames,
+                    updatedStudentEmails
+                })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    alert('Students updated successfully!');
-                    location.reload();  // Reload the page after update
-                } else {
-                    alert('Error: ' + data.error);
-                }
+                studentNames.forEach(function(name) {
+                    name.contentEditable = false;
+                });
+
+                studentEmails.forEach(function(email) {
+                    email.contentEditable = false;
+                });
+
+                saveButton.classList.add('d-none');
+                updateButton.innerText = 'Update';
+                isEditing = false;
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .catch(error => console.error(error));
         });
     </script>
 </body>
